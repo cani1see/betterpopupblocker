@@ -21,12 +21,13 @@
 // Save the function pointers to the javascript functions we are going to manipulate.
 // Then, set them to null. This is done at the very beginning because below, sendRequest is asynchronous
 // and will let other javascript code execute while it's waiting. 
-// I hope Google Chrome will implement the canLoad synchronous function that Apple Safari has to address this.
-// A consequence of this is that a coder specifically targetting this extension can bypass our blocker by parsing the document javascript
-// with a specialized regular expression.
+// We also remove the javascript we inject into the page using a special trick so that others cannot parse the page 
+// and see our variable names in the global space that can be used to try to bypass our blocker.
+// I hope Google Chrome will implement the canLoad synchronous function that Apple Safari has so that I don't need to use the global space.
 var currURL = window.location.href;
-var obfusChars = "BetterPopUpBlocker" + randomID(20);
+var obfusChars = "BPUB" + randomID(20);
 
+var obfusPartsID = "ID_Block_First";
 var obfusParts = [
 	obfusChars, "windowOpen=window.open;window.open=null;",
 	
@@ -50,10 +51,13 @@ var obfusParts = [
 	
 	obfusChars, "windowPrint=window.print;window.print=null;",
 	
-	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"
+	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;",
+	
+	"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+	obfusChars, obfusPartsID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 ];
 	
-injectGlobal(obfusParts.join(""));	
+injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
 
 
 function coreLogic(settings) {
@@ -63,7 +67,13 @@ function coreLogic(settings) {
 	}
 	else
 	{
-		injectGlobal("window.open=" + obfusChars + "windowOpen;");
+		var deblockID = "ID_Unblock_WindowOpen";
+		var deblockParts = [
+			"window.open=", obfusChars, "windowOpen;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+		];
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);		
 	}
 		
 	if (!settings.enabled && settings.blockWindowPrompts)
@@ -72,12 +82,15 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_WindowPrompts";
 		var deblockParts = [
 			"window.prompt=", obfusChars, "windowPrompt;",
 			"window.confirm=", obfusChars, "windowConfirm;",
-			"window.alert=", obfusChars, "windowAlert;"
+			"window.alert=", obfusChars, "windowAlert;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
 	}
 
 	if (!settings.enabled && settings.blockWindowMovingAndResize)
@@ -86,6 +99,7 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_WindowMovingAndResize";
 		var deblockParts = [
 			"window.moveTo=", obfusChars, "windowMoveTo;",
 			"window.moveBy=", obfusChars, "windowMoveBy;",
@@ -94,9 +108,11 @@ function coreLogic(settings) {
 			"window.scrollBy=", obfusChars, "windowScrollBy;",
 			"window.scrollTo=", obfusChars, "windowScrollTo;",
 			"window.blur=", obfusChars, "windowBlur;",
-			"window.focus=", obfusChars, "windowFocus;"
+			"window.focus=", obfusChars, "windowFocus;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
 	}
 	
 	if (!settings.enabled && settings.blockJSSelection)
@@ -105,11 +121,14 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_JSSelection";
 		var deblockParts = [
-			"document.getSelection=", obfusChars, "documentGetSelection;",
-			"window.getSelection=", obfusChars, "windowGetSelection;"
+			"if(document.getSelection)document.getSelection=", obfusChars, "documentGetSelection;",
+			"window.getSelection=", obfusChars, "windowGetSelection;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
 	
 	if (!settings.enabled && settings.blockOnUnload)
@@ -118,10 +137,13 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_OnUnload";
 		var deblockParts = [
-			"window.onunload=", obfusChars, "windowOnUnLoad;"
+			"window.onunload=", obfusChars, "windowOnUnLoad;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
 	
 	if (!settings.enabled && settings.blockJSPrint)
@@ -130,10 +152,13 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_JSPrint";
 		var deblockParts = [
-			"window.print=", obfusChars, "windowPrint;"
+			"window.print=", obfusChars, "windowPrint;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
 	
 	if (!settings.enabled && settings.blockCreateEvents)
@@ -142,10 +167,13 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var deblockID = "ID_Unblock_JSPrint";
 		var deblockParts = [
-			"document.createEvent=", obfusChars, "documentCreateEvent;"
+			"document.createEvent=", obfusChars, "documentCreateEvent;",
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
+			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
 		];
-		injectGlobal(deblockParts.join(""));
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
 	
 	// These functions are not blocked at the very beginning because some websites use them on load or
@@ -170,6 +198,13 @@ function inject(f) {
 
 function injectGlobal(f) {
     var script = document.createElement("script");
+    script.textContent = f;
+    document.documentElement.appendChild(script);
+}
+
+function injectGlobalWithId(f, id) {
+    var script = document.createElement("script");
+	script.id = id;
     script.textContent = f;
     document.documentElement.appendChild(script);
 }
