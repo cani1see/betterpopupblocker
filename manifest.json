@@ -1,0 +1,42 @@
+{
+	"name": "Better Pop Up Blocker",
+	"version": "1.0",
+	"background_page": "background.html",
+	"options_page": "options.html", 
+  
+ 	"description": "Improves the Google Chrome pop up blocker by blocking javascript pop up windows & other annoyances that it misses.",
+	"icons": 
+	{ 
+		"16": "MainIcon16.png",
+		"48": "MainIcon48.png",
+		"128": "MainIcon128.png" 
+	},
+	
+	"content_scripts": [
+		{
+		  "js": [ "blockStart.js" ],
+		  "matches": [ "http://*/*", "https://*/*"],
+		  "run_at": "document_start",
+		  "all_frames": true
+		},
+		{
+		  "js": [ "blockIdle.js" ],
+		  "matches": [ "http://*/*", "https://*/*"],
+		  "run_at": "document_idle",
+		  "all_frames": true
+		}
+	],
+	
+	"browser_action": 
+	{
+		"default_icon": "MainIcon48.png",
+		"default_title": "Better Pop Up Blocker",
+		"default_popup": "browserActionPopUp.html"
+	},	
+	
+	"permissions": [
+		"tabs",
+		"http://*/*",
+		"https://*/*"
+	]
+}

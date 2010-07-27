@@ -1,0 +1,161 @@
+<html>
+<head>
+<script src="common/config.js"></script>
+
+<style>
+body {
+  overflow: hidden;
+  margin: 0px;
+  padding: 0px;
+  background: white;
+  width: 300px;
+}
+
+div:first-child {
+  margin-top: 0px;
+}
+
+div {
+ cursor: pointer;
+ padding: 15px 3px;
+ font-size: medium;
+ font-family: Arial, Helvetica, sans-serif;
+ color: #000000;
+ background-color: #FFFFFF;
+ text-align: center;
+ width: 300px;
+}
+
+div:hover {
+  background: #BBBBBB;
+}
+
+#addOrRemove {
+	background-color: #DDDDDD;
+}
+
+#addOrRemove:hover {
+  background: #BBBBBB;
+}
+
+</style>
+</head>
+<body>
+<div onclick="" id="addOrRemove"></div>
+<div onclick="" id="toggleOnOff"></div>
+
+<script type = "text/javascript">
+chrome.tabs.getSelected(null, 
+	function(tab)
+	{	
+		var addOrRemoveDiv = document.getElementById("addOrRemove");
+		var toggleOnOffDiv = document.getElementById("toggleOnOff");
+		
+		var splitURL = tab.url.toLowerCase().match(/^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)[a-z0-9_-]+\.[a-z]+/i);
+		var coreWebsiteAddress = null;
+		if (splitURL != null && splitURL.length > 0)
+		{
+			coreWebsiteAddress = splitURL[0];
+		}
+		
+		if (coreWebsiteAddress)
+		{
+			if (isWhitelisted(coreWebsiteAddress))
+			{
+				addOrRemoveDiv.appendChild(document.createTextNode("~Remove " + coreWebsiteAddress + " from whitelist"));
+				addOrRemoveDiv.onclick = function(){removeSite(coreWebsiteAddress);};
+			}
+			else
+			{
+				addOrRemoveDiv.appendChild(document.createTextNode("~Add " + coreWebsiteAddress + " to whitelist"));
+				addOrRemoveDiv.onclick = function(){addSite(coreWebsiteAddress);};
+			}						
+		}
+		else	// something wrong with the url
+		{
+			addOrRemoveDiv.appendChild(document.createTextNode("~N/A or Non-English"));
+		}
+		
+		// Toggling on/off
+		var currState = config.get('globalAllowAll');
+		if (currState)
+		{
+			toggleOnOffDiv.appendChild(document.createTextNode("~Turn blocker ON"));
+		}
+		else
+		{
+			toggleOnOffDiv.appendChild(document.createTextNode("~Turn blocker OFF"));
+		}
+		toggleOnOffDiv.onclick = function(){toggleOnOff(currState);};		
+	}
+);
+	
+
+function removeSite(url) {
+	var whitelist = config.get("whitelist");
+	var urlLowerCase = url.toLowerCase();
+	for (var i = 0; i < whitelist.length; i++)
+	{
+		if (RegExp('^\^', 'i').test(whitelist[i]))
+		{
+			isOnList = RegExp(whitelist[i], 'i').test(url);			
+		}
+		else
+		{
+			isOnList = (urlLowerCase.indexOf(whitelist[i].toLowerCase()) == 0);
+		}
+		
+		if (isOnList)
+		{
+			whitelist.splice(i, 1);
+			isOnList = false;
+		}
+	}
+	
+	// This is inefficient, we are saving the entire list each time
+	config.set("whitelist", whitelist);
+	
+	checkAndReload();
+	window.close();
+}
+
+function addSite(url) {
+	var whitelist = config.get("whitelist");	
+	whitelist.push(url.toLowerCase());
+	
+	// This is inefficient, we are saving the entire list each time
+	config.set("whitelist", whitelist);
+	checkAndReload();
+	window.close();
+}
+
+function toggleOnOff(currState) {
+	if (currState == true)
+	{
+		config.set('globalAllowAll', false);
+		chrome.browserAction.setBadgeText({text:String('on')});
+		chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});
+	}
+	else
+	{
+		config.set('globalAllowAll', true);
+		chrome.browserAction.setBadgeText({text:String('off')});
+		chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});
+	}
+	
+	checkAndReload();
+	window.close();	
+}
+
+function checkAndReload() {
+	var shouldReload = config.get('reloadCurrentTabOnToggle');
+	if (shouldReload)
+	{
+		chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
+	}
+}
+</script>
+
+</body>
+</head>
+</html>

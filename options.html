@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html style="direction: ltr;" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><!--
+ ____________________________________________________________
+|                                                            |
+|    DESIGN + Pat Heard { http://fullahead.org }             |
+|      DATE + 2006.09.12                                     |
+| COPYRIGHT + Free use if this notice is kept in place.      |
+|____________________________________________________________|
+
+-->
+
+
+  
+
+  <title>Options | Better Pop Up Blocker</title><meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+  
+  <meta name="author" content="Eric Wong, http://www.optimalcycling.com" />
+  <meta name="keywords" content="XHTML, CSS, template, FullAhead" />
+  <meta name="description" content="Because you really don't like pop ups" />
+  <meta name="robots" content="index, follow, noarchive" />
+  <meta name="googlebot" content="noarchive" />
+
+  <link rel="stylesheet" type="text/css" href="css/html.css" media="screen, projection, tv " />
+  <link rel="stylesheet" type="text/css" href="css/layout.css" media="screen, projection, tv" />
+  <link rel="stylesheet" type="text/css" href="css/print.css" media="print" /><!-- Conditional comment to apply opacity fix for IE #content background.
+       Invalid CSS, but can be removed without harming design --><!--[if gt IE 5]>
+  <link rel="stylesheet" type="text/css" href="css/ie.css" media="screen, projection, tv " />
+  <![endif]-->
+  
+   <script src="common/config.js"></script>
+  <script src="options.js"></script>
+  
+  <script type = "text/javascript">	
+	function showSavedButtons()
+	{
+		$("saveButtonTop").value = "SAVED!";
+		$("saveButtonBottom").value = "SAVED!";
+		$("saveButtonOther").value = "SAVED!";		
+		$("saveButtonDefaults").value = "SAVED!";		
+		
+		window.setTimeout("showReadyButtons()", 1500);
+	}
+	
+	function showReadyButtons()
+	{
+		$("saveButtonTop").value = "Save Options";
+		$("saveButtonBottom").value = "Save Options";
+		$("saveButtonOther").value = "Save Options";		
+		$("saveButtonDefaults").value = "Save Options";
+		$("resetOptionsButton").value = "Reset Options to Defaults";
+	}
+
+	function resetOptionsToDefaults()
+	{
+		$("blockWindowOpen").checked = true;
+		$("blockWindowPrompts").checked = true;
+		$("blockJSSelection").checked = true;
+		$("blockJSContextMenuAndClickIntercept").checked = true;
+		$("blockWindowMovingAndResize").checked = true;
+		$("blockJSPrint").checked = true;
+		$("blockOnUnload").checked = true;
+		$("blockCreateEvents").checked = true;
+		$("blockWindowTargets").checked = true;
+		$("blockUnescapeEval").checked = false;
+		$("blockJSTimers").checked = false;
+		
+		$("closeAllPopUpWindows").checked = false;
+		$("reloadCurrentTabOnToggle").checked = true;
+		$("extendedTooltips").checked = true;
+		
+	}
+  </script></head>
+<body onload="init();">
+
+<!-- #wrapper: centers the content and sets the width -->
+<div style="width: 593px;" id="wrapper">
+
+  <!-- #content: applies the white, dropshadow background -->
+  <div id="content">
+
+    <!-- #header: holds site title and subtitle -->
+    <div id="header">
+      <h1><span class="big darkBrown">Better Pop Up Blocker</span></h1>
+      <h2><span class="highlight">Because you really don't like pop ups</span></h2>
+    </div>
+
+
+
+    <!-- #menu: topbar menu of the site.  Use the helper classes .two, .three, .four and .five to set
+                the widths for 2, 3, 4 and 5 item menus. -->
+    <ul id="menu" class="four">
+      <li><a href="options.html" title="Options" class="here">Options<span class="big"></span></a></li>
+      <li><a href="http://optimalcycling.com/other-projects/better-pop-up-blocker/" title="Home"><span class="big">Home</span></a></li>
+      <li><a href="http://optimalcycling.com/other-projects/better-pop-up-blocker/" title="About"><span class="big">About</span></a></li>
+      <li><a href="http://optimalcycling.com/other-projects/better-pop-up-blocker/" title="Contact"><span class="big">Contact</span></a></li>
+    </ul>
+
+    <!-- #page: holds all page content, as well as footer -->
+    <div id="page">
+
+      <h1>Whitelist Web Sites</h1><p style="text-align: left;"><textarea name="whitelist" id="whitelist" cols="80" rows="20"></textarea>
+  
+  </p><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonTop" id="saveButtonTop" value="Save Options" class="button" type="button" /></big></big></p><p>
+    To whitelist, enter the address of the web site (one per line).
+	For example, <code> http//www.hulu.com </code>whitelists Hulu by searching for the above string at the beginning of a URL.</p><p>Alternatively, you can use regular expressions if you start the expression off with a caret.
+	For example, <code> ^(http[s]?://[a-z0-9._-]+.|http[s]?://)google.[a-z]+($|/) </code>
+is the regular expression to whitelist all Google web sites regardless
+if they are http or https and regardless of whether its .com, .ca,
+.co.uk, etc....&nbsp;</p><p>All URLs and regular expressions are case insensitive.
+  </p><p><br />
+  
+  </p><h1>Blocked Functions</h1>
+   <p>
+    Select the html/javascript functions to block below:
+  </p>
+
+  <div class="blockedFunctions">
+    <p>			
+		<input name="blockWindowOpen" id="blockWindowOpen" type="checkbox" />Javascript window pop ups<br />
+		<input name="blockWindowPrompts" id="blockWindowPrompts" type="checkbox" />Prompt &amp; alert boxes<br />
+		<input name="blockJSSelection" id="blockJSSelection" type="checkbox" />Text selection intercept<br />
+		<input name="blockJSContextMenuAndClickIntercept" id="blockJSContextMenuAndClickIntercept" type="checkbox" />Javscript context menu, cut/copy/past, &amp; click intercept<br />
+		<input name="blockWindowMovingAndResize" id="blockWindowMovingAndResize" type="checkbox" />Automatically moving &amp; resizing windows<br />		
+		<input name="blockJSPrint" id="blockJSPrint" type="checkbox" />Print dialogues opened by javascript<br />		
+		<input name="blockOnUnload" id="blockOnUnload" type="checkbox" />Fire events on unload (leaving a web page)<br />
+		<input name="blockCreateEvents" id="blockCreateEvents" type="checkbox" />Javascript mouse click and keystroke simulation (document.createEvent)<br />
+		<input name="blockWindowTargets" id="blockWindowTargets" type="checkbox" />Window targets (checking this forces pages to load in the same tab)<br />	
+		<input name="blockUnescapeEval" id="blockUnescapeEval" type="checkbox" />Unescape &amp; eval (used to obfuscate code)<br />
+		<input name="blockJSTimers" id="blockJSTimers" type="checkbox" />Javascript timers
+		
+    </p>
+  </div><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonBottom" id="saveButtonBottom" value="Save Options" class="button" type="button" /></big></big></p><br />
+  
+  <h1>Other</h1>
+
+  <div class="otherOptions">
+    <p>			
+		<input name="closeAllPopUpWindows" id="closeAllPopUpWindows" type="checkbox" />Try
+to close all pop up windows that get through. Mainly for plugins like
+Flash that are not javascript. (***WARNING: Ignores Whitelist***)<br />
+		<input name="reloadCurrentTabOnToggle" id="reloadCurrentTabOnToggle" type="checkbox" />Reload current tab when toggling extension browser button<br />
+		<input name="extendedTooltips" id="extendedTooltips" type="checkbox" />Show extended tooltips &amp; try to strip javascript on text links<br />
+
+    </p>
+  </div><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonOther" id="saveButtonOther" value="Save Options" class="button" type="button" /></big></big></p><h1><br /></h1><h1>Default Options</h1>To reset the options to the default values, excluding the whitelist, click the two buttons below:<p style="text-align: center;"><big><big><input onclick="this.value='Options Reset. Click Save Options to Save.'; resetOptionsToDefaults();" name="resetOptionsButton" id="resetOptionsButton" value="Reset Options to Defaults" class="button" type="button" /></big></big></p><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonDefaults" id="saveButtonDefaults" value="Save Options" class="button" type="button" /></big></big></p>
+
+
+      <!-- .footer: the site footer text, links and whatever else -->
+      <p class="footer">
+        Better Pop Up Blocker is Copyright (C) 2010 Eric Wong, <a href="http://optimalcycling.com">http://optimalcycling.com</a>&nbsp;
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+</body></html>
