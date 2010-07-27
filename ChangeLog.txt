@@ -20,3 +20,7 @@
 
 Better Pop Up Blocker 1.0.0 July 26th, 2010
 First public version.
+
+Better Pop Up Blocker 1.1.0 July 27th, 2010
+Fixed the browser action pop up to accept unicode urls.
+Injected javascript code now removes itself to prevent other code from being able to parse it's variables.
