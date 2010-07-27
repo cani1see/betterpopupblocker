@@ -24,3 +24,7 @@ First public version.
 Better Pop Up Blocker 1.1.0 July 27th, 2010
 Fixed the browser action pop up to accept unicode urls.
 Injected javascript code now removes itself to prevent other code from being able to parse it's variables.
+
+Better Pop Up Blocker 1.1.1 July 27th, 2010
+Added support for blocking the less common window.showModalDialog and window.showModelessDialog methods.
+Reversed the self-removal of javascript in 1.1.0 since there are easier ways to parse the variables.

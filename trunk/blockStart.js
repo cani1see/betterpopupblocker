@@ -26,10 +26,12 @@
 // I hope Google Chrome will implement the canLoad synchronous function that Apple Safari has so that I don't need to use the global space.
 var currURL = window.location.href;
 var obfusChars = "BPUB" + randomID(20);
-
+	
 var obfusPartsID = "ID_Block_First";
 var obfusParts = [
 	obfusChars, "windowOpen=window.open;window.open=null;",
+	obfusChars, "windowShowModelessDialog=window.showModelessDialog;window.showModelessDialog=null;",
+	obfusChars, "windowShowModalDialog=window.showModalDialog;window.showModalDialog=null;",
 	
 	obfusChars, "windowPrompt=window.prompt;window.prompt=null;", 
 	obfusChars, "windowConfirm=window.confirm;window.confirm=null;", 
@@ -51,14 +53,11 @@ var obfusParts = [
 	
 	obfusChars, "windowPrint=window.print;window.print=null;",
 	
-	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;",
-	
-	"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-	obfusChars, obfusPartsID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"
 ];
 	
 injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
-
+chrome.extension.sendRequest({url: currURL}, coreLogic);
 
 function coreLogic(settings) {
 	if (!settings.enabled && settings.blockWindowOpen)
@@ -66,12 +65,12 @@ function coreLogic(settings) {
 		//blockWindowOpen();
 	}
 	else
-	{
+	{ 
 		var deblockID = "ID_Unblock_WindowOpen";
 		var deblockParts = [
 			"window.open=", obfusChars, "windowOpen;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"window.showModelessDialog=", obfusChars, "windowShowModelessDialog;",
+			"window.showModalDialog=", obfusChars, "windowShowModalDialog;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);		
 	}
@@ -81,14 +80,12 @@ function coreLogic(settings) {
 		//blockWindowPrompts();
 	}
 	else
-	{
+	{  
 		var deblockID = "ID_Unblock_WindowPrompts";
 		var deblockParts = [
 			"window.prompt=", obfusChars, "windowPrompt;",
 			"window.confirm=", obfusChars, "windowConfirm;",
-			"window.alert=", obfusChars, "windowAlert;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"window.alert=", obfusChars, "windowAlert;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
 	}
@@ -108,9 +105,7 @@ function coreLogic(settings) {
 			"window.scrollBy=", obfusChars, "windowScrollBy;",
 			"window.scrollTo=", obfusChars, "windowScrollTo;",
 			"window.blur=", obfusChars, "windowBlur;",
-			"window.focus=", obfusChars, "windowFocus;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"window.focus=", obfusChars, "windowFocus;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
 	}
@@ -123,10 +118,8 @@ function coreLogic(settings) {
 	{
 		var deblockID = "ID_Unblock_JSSelection";
 		var deblockParts = [
-			"if(document.getSelection)document.getSelection=", obfusChars, "documentGetSelection;",
-			"window.getSelection=", obfusChars, "windowGetSelection;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"document.getSelection=", obfusChars, "documentGetSelection;",
+			"window.getSelection=", obfusChars, "windowGetSelection;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
@@ -139,9 +132,7 @@ function coreLogic(settings) {
 	{
 		var deblockID = "ID_Unblock_OnUnload";
 		var deblockParts = [
-			"window.onunload=", obfusChars, "windowOnUnLoad;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"window.onunload=", obfusChars, "windowOnUnLoad;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
@@ -154,9 +145,7 @@ function coreLogic(settings) {
 	{
 		var deblockID = "ID_Unblock_JSPrint";
 		var deblockParts = [
-			"window.print=", obfusChars, "windowPrint;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"window.print=", obfusChars, "windowPrint;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
@@ -169,9 +158,7 @@ function coreLogic(settings) {
 	{
 		var deblockID = "ID_Unblock_JSPrint";
 		var deblockParts = [
-			"document.createEvent=", obfusChars, "documentCreateEvent;",
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id == '", 
-			obfusChars, deblockID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+			"document.createEvent=", obfusChars, "documentCreateEvent;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
@@ -187,8 +174,6 @@ function coreLogic(settings) {
 	}
 			
 }	
-
-chrome.extension.sendRequest({url: currURL}, coreLogic);
 
 function inject(f) {
     var script = document.createElement("script");

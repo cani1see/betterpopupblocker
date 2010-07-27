@@ -1,10 +1,10 @@
 {
 	"name": "Better Pop Up Blocker",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"background_page": "background.html",
 	"options_page": "options.html", 
   
- 	"description": "Improves the Google Chrome pop up blocker by blocking javascript pop up windows & other annoyances that it misses.",
+ 	"description": "Improves the Google Chrome pop up blocker by blocking pop up windows opened by javascript & other annoyances that it misses.",
 	"icons": 
 	{ 
 		"16": "MainIcon16.png",
