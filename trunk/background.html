@@ -1,0 +1,57 @@
+<html>
+<head>
+<script src="common/config.js"></script>
+<script src="background.js"></script>
+
+<script type = "text/javascript">
+	config.set('globalAllowAll', false);
+	
+	// Show the current state of the plugin
+	var initialState = config.get('globalAllowAll');
+	if (initialState == true)
+	{		
+		chrome.browserAction.setBadgeText({text:String('off')});
+		chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});		
+	}
+	else
+	{
+		chrome.browserAction.setBadgeText({text:String('on')});
+		chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});		
+	}
+	
+	chrome.windows.onCreated.addListener(
+		function(wnd) {
+			// valid values for type: normal, popup
+			if (wnd.type === "popup" && config.get("globalAllowAll") !== true && config.get("closeAllPopUpWindows") === true)
+				chrome.windows.remove(wnd.id);				
+		}
+	);	
+	
+	// Toggle global state of the plugin
+	/*
+	chrome.browserAction.onClicked.addListener(function(tab) {	
+		var currState = config.get('globalAllowAll');
+		if (currState == true)
+		{
+			config.set('globalAllowAll', false);
+			chrome.browserAction.setBadgeText({text:String('on')});
+			chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});
+		}
+		else
+		{
+			config.set('globalAllowAll', true);
+			chrome.browserAction.setBadgeText({text:String('off')});
+			chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});
+		}
+
+		var shouldReload = config.get('reloadCurrentTabOnToggle');
+		if (shouldReload)
+		{
+			chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
+		}
+	});*/	
+</script>
+</head>
+</html>
+
+
