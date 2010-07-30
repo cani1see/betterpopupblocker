@@ -28,3 +28,10 @@ Injected javascript code now removes itself to prevent other code from being abl
 Better Pop Up Blocker 1.1.1 July 27th, 2010
 Added support for blocking the less common window.showModalDialog and window.showModelessDialog methods.
 Reversed the self-removal of javascript in 1.1.0 since there are easier ways to parse the variables.
+
+Better Pop Up Blocker 1.2.0 July 29th, 2010
+Added support for preventing infinite prompt/alert/confirm/print/window pop up attacks in Google Chrome when you allow a site to use these functions.
+The protection is provided as long as the extension is running and a maximum of 30 for each group of prompt/alert/confirm, print, and window pop ups.
+Fixed the use of incorrect regular expressions shown on the Options page. Before, the example regular expressions were not correctly escaped,
+but they still whitelisted the sites you want.
+V1.2 will automatically corrects the default regular expressions from older versions. Please check your own regular expressions if you followed the examples.

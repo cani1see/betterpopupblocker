@@ -24,8 +24,16 @@ var config = {
 };
 
 config.defaults({
+
+    whitelist: ['http://www.hulu.com', 'http://hulu.com', '^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)google\\.[a-z]+($|\\/)', 
+		'^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)', 
+		'^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)pezcyclingnews\\.[a-z]+($|\\/)'],
+
+	/* This is the old whitelist for versions before 1.2 that have incorrectly escaped regular expressions
     whitelist: ['http://www.hulu.com', 'http://hulu.com', '^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/)', 
 		'^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)youtube\.[a-z]+($|\/)', '^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)pezcyclingnews\.[a-z]+($|\/)'],
+	*/
+	
 	globalAllowAll: false,
 	
 	blockWindowOpen: true,
@@ -45,7 +53,9 @@ config.defaults({
 	
 	extendedTooltips: true,
 	
-	blockCreateEvents: true
+	blockCreateEvents: true,
+	
+	currVersion: 0
 });
 
 function isWhitelisted(url) {
