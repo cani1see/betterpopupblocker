@@ -30,7 +30,7 @@
    <script src="common/config.js"></script>
   <script src="options.js"></script>
   
-  <script type = "text/javascript">	
+  <script type="text/javascript">	
 	function showSavedButtons()
 	{
 		$("saveButtonTop").value = "SAVED!";
@@ -103,7 +103,7 @@
   </p><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonTop" id="saveButtonTop" value="Save Options" class="button" type="button" /></big></big></p><p>
     To whitelist, enter the address of the web site (one per line).
 	For example, <code> http//www.hulu.com </code>whitelists Hulu by searching for the above string at the beginning of a URL.</p><p>Alternatively, you can use regular expressions if you start the expression off with a caret.
-	For example, <code> ^(http[s]?://[a-z0-9._-]+.|http[s]?://)google.[a-z]+($|/) </code>
+	For example, <code>^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/) </code>
 is the regular expression to whitelist all Google web sites regardless
 if they are http or https and regardless of whether its .com, .ca,
 .co.uk, etc....&nbsp;</p><p>All URLs and regular expressions are case insensitive.

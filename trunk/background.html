@@ -4,6 +4,36 @@
 <script src="background.js"></script>
 
 <script type = "text/javascript">
+
+	// We used incorrectly escaped regular expressions in versions previous to 1.2 so we are trying
+	// to fix the default ones here
+	function fixRegularExpressions()
+	{
+		var currWhitelist = config.get('whitelist');
+		for (var i=0; i < currWhitelist.length; i++)
+		{	
+			if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/)")
+			{
+				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)google\\.[a-z]+($|\\/)";
+			}
+			else if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)youtube\.[a-z]+($|\/)")
+			{
+				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)";
+			}
+			else if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)pezcyclingnews\.[a-z]+($|\/)")
+			{
+				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)pezcyclingnews\\.[a-z]+($|\\/)";
+			}
+		}
+		config.set("whitelist", currWhitelist);
+	}
+	
+	if (config.get('currVersion') < 100200000)
+	{
+		fixRegularExpressions();
+		config.set('currVersion', 100200000);
+	}
+
 	config.set('globalAllowAll', false);
 	
 	// Show the current state of the plugin

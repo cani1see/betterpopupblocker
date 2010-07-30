@@ -110,3 +110,5 @@ chrome.extension.sendRequest({url: location.href}, function(settings) {
 	}
 });
 
+//document.removeEventListener("beforeload", blockScripts, true); 
+

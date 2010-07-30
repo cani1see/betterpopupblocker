@@ -26,7 +26,7 @@
 // I hope Google Chrome will implement the canLoad synchronous function that Apple Safari has so that I don't need to use the global space.
 var currURL = window.location.href;
 var obfusChars = "BPUB" + randomID(20);
-	
+
 var obfusPartsID = "ID_Block_First";
 var obfusParts = [
 	obfusChars, "windowOpen=window.open;window.open=null;",
@@ -46,7 +46,7 @@ var obfusParts = [
 	obfusChars, "windowBlur=window.blur;window.blur=null;",
 	obfusChars, "windowFocus=window.focus;window.focus=null;",
 	
-	obfusChars, "documentGetSelction=document.getSelection;document.getSelection=null;",
+	obfusChars, "documentGetSelection=document.getSelection;document.getSelection=null;",
 	obfusChars, "windowGetSelection=window.getSelection;window.getSelection=null;",
 	
 	obfusChars, "windowOnUnLoad=window.onunload;window.onunload=null;",
@@ -55,22 +55,48 @@ var obfusParts = [
 	
 	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"
 ];
-	
+
 injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
 chrome.extension.sendRequest({url: currURL}, coreLogic);
 
 function coreLogic(settings) {
+	
 	if (!settings.enabled && settings.blockWindowOpen)
 	{
 		//blockWindowOpen();
 	}
 	else
 	{ 
+		var nameMaxCount = obfusChars + "maxWindowsOpen";
+		var nameWindowsOpenCount = obfusChars + "windowsOpenCount";
+		var nameWindowOpen = obfusChars + "windowOpen";
+		var nameWindowShowModelessDialog = obfusChars + "windowShowModelessDialog";
+		var nameWindowShowModalDialog = obfusChars + "windowShowModalDialog";
+		
 		var deblockID = "ID_Unblock_WindowOpen";
 		var deblockParts = [
+			"const ", nameMaxCount, "=30;",
+			"var ", nameWindowsOpenCount, "=0;",
+
+			"window.open = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 2) return ", 
+			nameWindowOpen, "(arguments[0], arguments[1]); else if (arguments.length == 3) return ", nameWindowOpen, 
+			"(arguments[0], arguments[1], arguments[2]);} return null; };",	
+
+			"window.showModelessDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
+			"if (arguments.length == 1) return ", nameWindowShowModelessDialog, "(arguments[0]); ",
+			"else if (arguments.length == 2) return ", nameWindowShowModelessDialog, "(arguments[0], arguments[1]); ", 
+			"else if (arguments.length == 3) return ", nameWindowShowModelessDialog, "(arguments[0], arguments[1], arguments[2]);} return null; };",		
+
+			"window.showModalDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
+			"if (arguments.length == 1) return ", nameWindowShowModalDialog, "(arguments[0]); ",
+			"else if (arguments.length == 2) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1]); ", 
+			"else if (arguments.length == 3) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1], arguments[2]);} return null; };",				
+		
+			/* Old unsafe method
 			"window.open=", obfusChars, "windowOpen;",
 			"window.showModelessDialog=", obfusChars, "windowShowModelessDialog;",
 			"window.showModalDialog=", obfusChars, "windowShowModalDialog;"
+			*/
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);		
 	}
@@ -81,11 +107,31 @@ function coreLogic(settings) {
 	}
 	else
 	{  
+		var nameMaxCount = obfusChars + "maxDialogs";
+		var nameWindowAlertsPromptsCount = obfusChars + "windowAlertsPromptsCount";
+		var nameWindowPrompt = obfusChars + "windowPrompt";
+		var nameWindowConfirm = obfusChars + "windowConfirm";
+		var nameWindowAlert = obfusChars + "windowAlert";		
+	
 		var deblockID = "ID_Unblock_WindowPrompts";
 		var deblockParts = [
+			"const ", nameMaxCount, "=30;",
+			"var ", nameWindowAlertsPromptsCount, "=0;",
+			
+			"window.prompt = function (promptText) { if(", nameWindowAlertsPromptsCount, " < ", nameMaxCount, ") {", nameWindowAlertsPromptsCount, "++; return ", 
+			nameWindowPrompt, "(promptText);} return null;};",
+			
+			"window.confirm = function (confirmText) { if(", nameWindowAlertsPromptsCount, " < ", nameMaxCount, ") {", nameWindowAlertsPromptsCount, "++; return ", 
+			nameWindowConfirm, "(confirmText);} return null;};",			
+			
+			"window.alert = function (alertText) { if(", nameWindowAlertsPromptsCount, " < ", nameMaxCount, ") {", nameWindowAlertsPromptsCount, "++; ", 
+			nameWindowAlert, "(alertText);} };",									
+			
+			/* Old unsafe method
 			"window.prompt=", obfusChars, "windowPrompt;",
 			"window.confirm=", obfusChars, "windowConfirm;",
 			"window.alert=", obfusChars, "windowAlert;"
+			*/
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
 	}
@@ -143,9 +189,21 @@ function coreLogic(settings) {
 	}
 	else
 	{
+		var nameMaxCount = obfusChars + "maxPrints";
+		var nameWindowPrintsCount = obfusChars + "windowPrintsCount";
+		var nameWindowPrint = obfusChars + "windowPrint";
+		
 		var deblockID = "ID_Unblock_JSPrint";
 		var deblockParts = [
+			"const ", nameMaxCount, "=30;",
+			"var ", nameWindowPrintsCount, "=0;",
+			
+			"window.print = function () { if(", nameWindowPrintsCount, " < ", nameMaxCount, ") {", nameWindowPrintsCount, "++; ", 
+			nameWindowPrint, "();} };"
+			
+			/* Old unsafe method
 			"window.print=", obfusChars, "windowPrint;"
+			*/
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
@@ -174,6 +232,7 @@ function coreLogic(settings) {
 	}
 			
 }	
+
 
 function inject(f) {
     var script = document.createElement("script");
@@ -283,70 +342,3 @@ function randomID(length)
    return generated;
 }
 
-
-
-
-/* Below is the hard coded and more reliable way of nulling javascript functions because it doesn't use 
-sendRequest, which is asynchronous and allows some javascript to run before blocking.
-It works more reliably but with the major disadvantage that you can't turn it off or have options.
-The code below is for comments and reference. Or if you are a coder, you can make your own hard coded blocker.
-function blockUndesirables() {
-    inject(function() {
-		// Blocks javascript pop up windows
-		window.open = null;	
-		
-		// Blocks modal prompts
-		window.prompt = null;
-		window.confirm = null;
-		window.alert = null;	
-
-		// Blocks javascript from bringing windows to front or pushing them back
-		window.blur = null;
-		window.focus = null;
-		
-		// Blocks auto movement and resizing of windows
-	    window.moveTo = null;
-        window.moveBy = null;
-        window.resizeTo = null;
-        window.resizeBy = null;
-		window.scrollBy = null;
-		window.scrollTo = null;		
-		
-		// Blocks javascript from making the current tab go back or forth
-		window.history = null;
-		
-		// Blocks one of the history leak exploits
-		window.getComputedStyle = null;
-
-		// Blocks javascript from seeing what you select
-		document.getSelection = null;
-		window.getSelection = null;
-
-		// Blocks javascript timers
-		//window.setTimeout = null;
-		//window.setInterval = null;
-
-		// Blocks javascript from doing something when you leave a page
-		window.onunload = null;	
-
-		// Blocks the unescape and eval functions frequently used by exploits
-		unescape = null;
-		eval = null;
-
-		// Blocks javascript from simulating text input and mouse clicks, amongst other things
-		document.createEvent = null;
-
-		// Blocks javascript from setting the current window url. However, many sites use this.
-		//window.location = null;
-		
-		// Blocks javascript writes into a page. Recommended to use appendChild instead
-		//document.write = null;					
-		//document.writeln = null;
-
-		window.print = null;
-    });
-}
-
-blockUndesirables();
-
-*/
