@@ -1,12 +1,11 @@
 <html>
 <head>
+<script src="common/port.js"></script>
 <script src="common/config.js"></script>
 <script src="background.js"></script>
 
 <script type = "text/javascript">
 
-	// We used incorrectly escaped regular expressions in versions previous to 1.2 so we are trying
-	// to fix the default ones here
 	function fixRegularExpressions()
 	{
 		var currWhitelist = config.get('whitelist');
@@ -28,12 +27,22 @@
 		config.set("whitelist", currWhitelist);
 	}
 	
-	if (config.get('currVersion') < 100200000)
-	{
-		fixRegularExpressions();
-		config.set('currVersion', 100200000);
+	if (config.get('currVersion') < 100300000)
+	{	
+		// We used incorrectly escaped regular expressions in versions previous to 1.2 so we are trying
+		// to fix the default ones here	
+		if (config.get('currVersion') < 100200000)
+		{
+			fixRegularExpressions();
+		}
+		
+		// We are now able to use the whitelist when closing pop ups from plugins like Flash so we re-enable it for everyone on first run.
+		//config.set('closeAllPopUpWindows', true);
+		
+		config.set('currVersion', 100300000);
 	}
 
+	/*	// For browser action button
 	config.set('globalAllowAll', false);
 	
 	// Show the current state of the plugin
@@ -48,38 +57,49 @@
 		chrome.browserAction.setBadgeText({text:String('on')});
 		chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});		
 	}
+	*/
 	
-	chrome.windows.onCreated.addListener(
-		function(wnd) {
-			// valid values for type: normal, popup
-			if (wnd.type === "popup" && config.get("globalAllowAll") !== true && config.get("closeAllPopUpWindows") === true)
-				chrome.windows.remove(wnd.id);				
-		}
-	);	
+	config.set('globalAllowAll', false);
+	config.set('tempList', new Array());	
 	
-	// Toggle global state of the plugin
-	/*
-	chrome.browserAction.onClicked.addListener(function(tab) {	
-		var currState = config.get('globalAllowAll');
-		if (currState == true)
-		{
-			config.set('globalAllowAll', false);
-			chrome.browserAction.setBadgeText({text:String('on')});
-			chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});
-		}
-		else
-		{
-			config.set('globalAllowAll', true);
-			chrome.browserAction.setBadgeText({text:String('off')});
-			chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});
-		}
-
-		var shouldReload = config.get('reloadCurrentTabOnToggle');
-		if (shouldReload)
-		{
-			chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
-		}
-	});*/	
+	if (SAFARI)
+	{
+		safari.application.addEventListener("command", performCommand, true);
+		safari.application.addEventListener("validate", validateCommand, true);
+	}
+	else
+	{
+		chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
+			if (config.get('showPageActionButton'))
+			{
+				var currState = config.get('globalAllowAll');
+				if (currState || isWhitelisted(tab.url))
+				{
+					chrome.pageAction.setIcon({path: "IconAllowed.png", tabId: tab.id});
+				}
+				else
+				{
+					chrome.pageAction.setIcon({path: "IconForbidden.png", tabId: tab.id});
+				}
+				chrome.pageAction.show(tab.id);
+			}
+			else
+			{
+				chrome.pageAction.hide(tab.id);
+			}
+		});	
+		
+		
+		chrome.windows.onCreated.addListener(
+			function(wnd) {
+				// valid values for type: normal, popup
+				if (wnd.type === "popup" && config.get("globalAllowAll") !== true && config.get("closeAllPopUpWindows") === true)
+					chrome.windows.remove(wnd.id);
+				
+			}
+		);	
+	}
+		
 </script>
 </head>
 </html>

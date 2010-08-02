@@ -20,6 +20,7 @@ function init() {
 	$('reloadCurrentTabOnToggle').checked = config.get('reloadCurrentTabOnToggle');	
 	
 	$('extendedTooltips').checked = config.get('extendedTooltips');	
+	$('showPageActionButton').checked = config.get('showPageActionButton');
 	
 	$('blockCreateEvents').checked = config.get('blockCreateEvents');	
 	
@@ -45,6 +46,7 @@ function save() {
 	config.set('reloadCurrentTabOnToggle', $('reloadCurrentTabOnToggle').checked);	
 	
 	config.set('extendedTooltips', $('extendedTooltips').checked);	
+	config.set('showPageActionButton', $('showPageActionButton').checked);	
 	
 	config.set('blockCreateEvents', $('blockCreateEvents').checked);	
 	

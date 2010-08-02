@@ -51,13 +51,21 @@ var obfusParts = [
 	
 	obfusChars, "windowOnUnLoad=window.onunload;window.onunload=null;",
 	
-	obfusChars, "windowPrint=window.print;window.print=null;",
+	obfusChars, "windowPrint=window.print;window.print=null;"
 	
-	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"
+	/*,
+	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"*/
 ];
 
 injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
 chrome.extension.sendRequest({url: currURL}, coreLogic);
+
+function callCoreLogic(theMessageEvent)
+{
+   if (theMessageEvent.name === "safari all settings") {
+      coreLogic(theMessageEvent.message);
+   }
+}
 
 function coreLogic(settings) {
 	
@@ -208,6 +216,7 @@ function coreLogic(settings) {
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
 	}	
 	
+	/* Blocking this at the very beginning was causing menu load problems on Apple.com
 	if (!settings.enabled && settings.blockCreateEvents)
 	{
 		//blockCreateEvents();
@@ -219,12 +228,14 @@ function coreLogic(settings) {
 			"document.createEvent=", obfusChars, "documentCreateEvent;"
 		];
 		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
-	}	
+	}	*/
 	
 	// These functions are not blocked at the very beginning because some websites use them on load or
 	// while we wait for sendMessage. Done to maintain best compatibility.
 	if (!settings.enabled)
 	{
+		if (settings.blockCreateEvents)
+			blockCreateEvents();
 		if (settings.blockUnescapeEval)
 			blockUnescapeEval();
 		if (settings.blockJSTimers)

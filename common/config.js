@@ -55,7 +55,10 @@ config.defaults({
 	
 	blockCreateEvents: true,
 	
-	currVersion: 0
+	currVersion: 0,
+	
+	showPageActionButton: true,
+	tempList: ""
 });
 
 function isWhitelisted(url) {
@@ -64,13 +67,14 @@ function isWhitelisted(url) {
 	var urlLowerCase = url.toLowerCase();
 	for (var i = 0; i < whitelist.length; i++)
 	{
-		if (RegExp('^\^', 'i').test(whitelist[i]))
+		if (RegExp('^\\^', 'i').test(whitelist[i]))
 		{
 			isOnList = RegExp(whitelist[i], 'i').test(url);			
 		}
 		else
 		{
 			isOnList = (urlLowerCase.indexOf(whitelist[i].toLowerCase()) == 0);
+			//isOnList = RegExp('^' + whitelist[i], 'i').test(url);
 		}
 		
 		if (isOnList)
