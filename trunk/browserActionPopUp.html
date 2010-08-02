@@ -1,55 +1,151 @@
 <html>
 <head>
+<script src="common/port.js"></script>
 <script src="common/config.js"></script>
 
-<style>
-body {
-  overflow: hidden;
-  margin: 0px;
-  padding: 0px;
-  background: white;
-  width: 300px;
-}
+		<title>Extension Action</title> 
+		<style> 
+			#wrapper {
+				width:300px;
+				margin:0px auto;
+				padding:2px 0px;
+				background: #EEE;
+				display:none;
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				-o-border-radius:5px;
+				border-radius:5px;
+			}
+			
+			#wrapperPriority {
+				width:302px;
+				margin:2px auto;
+				padding:2px 2px;
+				background: green;
+				display:none;
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				-o-border-radius:5px;
+				border-radius:5px;				
+			}
 
-div:first-child {
-  margin-top: 0px;
-}
+			#wrapperStatus {
+				width:300px;
+				margin:0px auto;
+				padding:2px 0px;
+				background: #f5f5f5;
 
-div {
- cursor: pointer;
- padding: 15px 3px;
- font-size: medium;
- font-family: Arial, Helvetica, sans-serif;
- color: #000000;
- background-color: #FFFFFF;
- text-align: center;
- width: 300px;
-}
+			}			
 
-div:hover {
-  background: #BBBBBB;
-}
-
-#addOrRemove {
-	background-color: #DDDDDD;
-}
-
-#addOrRemove:hover {
-  background: #BBBBBB;
-}
-
-</style>
+			#status {
+				font-family: 'Arial', arial, serif;
+				font-size:12px;
+				color:#000;
+				text-decoration:none;
+			}			
+ 
+			#footer {
+				text-align:center;
+			}
+ 
+			#footer, #footer a {
+				color:#ccc;
+			}
+ 
+			h1, h2, p, a {
+				font-family: 'Arial', arial, serif;
+				line-height:1.5;
+			}
+ 
+			h1 {
+				margin:0 0 10px 0;
+				letter-spacing:1px;
+			}
+ 
+			h2 {
+				margin:20px 0 5px 0;
+				font-size:20px;
+			}
+ 
+			body {
+				background:#f5f5f5;
+			}
+		</style> 
+		<style> 
+			div.button {
+				font-family: 'Arial', arial, serif;
+				font-size:18px;
+				color:#000;
+				text-decoration:none;
+				
+				cursor: pointer;
+				
+				width:300px;
+				padding:10px 0px;
+				border:1px solid #DDD;
+				text-align:center;
+                display:block;
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				-o-border-radius:5px;
+				border-radius:5px;
+ 
+				background:#FFFFFF;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFFFFF), to(#EEE));
+				background:-moz-linear-gradient(0% 90% 90deg, #EEE, #FFF);
+ 
+				-webkit-transition: all .4s ease-in-out;
+				-moz-transition: all .4s ease-in-out;
+				-o-transition: all .4s ease-in-out;
+				transition: all .4s ease-in-out;
+			}
+			div.button:hover {
+				color:#fff;
+				border-color:#3278BE;
+ 
+				background:#4195DD;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#4195DD), to(#003C82));
+				background:-moz-linear-gradient(0% 90% 90deg, #003C82, #4195DD);
+			}
+			div.button:active {
+				background:#4195DD;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#003C82), to(#4195DD));
+				background:-moz-linear-gradient(0% 90% 90deg, #4195DD, #003C82);
+			}
+ 
+			div.button.notransitions {
+				-webkit-transition: none;
+				-moz-transition: none;
+				-o-transition: none;
+				transition: none;
+			}
+			
+		</style> 
+		
 </head>
 <body>
-<div onclick="" id="addOrRemove"></div>
-<div onclick="" id="toggleOnOff"></div>
+
+<div id="wrapperStatus">
+	<div id="status">Status</div>
+</div> 
+<div id="wrapperPriority">
+	<div onclick="" id="addOrRemove" name="addOrRemove" class="button notransitions"></div>  		
+</div> 	
+<div id="wrapper">
+	<div onclick="" id="toggleOnOff" name="toggleOnOff" class="button notransitions"></div>  		
+</div> 
 
 <script type = "text/javascript">
 chrome.tabs.getSelected(null, 
 	function(tab)
 	{	
+		var statusDiv = document.getElementById("status");
+		
 		var addOrRemoveDiv = document.getElementById("addOrRemove");
+		var addOrRemoveWrapper = addOrRemoveDiv.parentNode;
+		
 		var toggleOnOffDiv = document.getElementById("toggleOnOff");
+		var toggleOnOffDivWrapper = toggleOnOffDiv.parentNode;
 		
 		var splitURL = tab.url.toLowerCase().match(/^http[s]?:\/\/[^\.]+\.[^\/]+/i);
 		var coreWebsiteAddress = null;
@@ -58,35 +154,50 @@ chrome.tabs.getSelected(null,
 			coreWebsiteAddress = splitURL[0];
 		}
 		
-		if (coreWebsiteAddress)
-		{
-			if (isWhitelisted(coreWebsiteAddress))
-			{
-				addOrRemoveDiv.appendChild(document.createTextNode("~Remove " + coreWebsiteAddress + " from whitelist"));
-				addOrRemoveDiv.onclick = function(){removeSite(coreWebsiteAddress);};
-			}
-			else
-			{
-				addOrRemoveDiv.appendChild(document.createTextNode("~Add " + coreWebsiteAddress + " to whitelist"));
-				addOrRemoveDiv.onclick = function(){addSite(coreWebsiteAddress);};
-			}						
-		}
-		else	// something wrong with the url
-		{
-			addOrRemoveDiv.appendChild(document.createTextNode("~N/A URL"));
-		}
-		
-		// Toggling on/off
 		var currState = config.get('globalAllowAll');
+			
+		// Toggling on/off
 		if (currState)
 		{
-			toggleOnOffDiv.appendChild(document.createTextNode("~Turn blocker ON"));
+			statusDiv.innerHTML = "All Pop Ups Temporarily Allowed on New Page Loads";
+			toggleOnOffDiv.appendChild(document.createTextNode("Revoke All Temporary"));
+			toggleOnOffDivWrapper.style.display = "block";
 		}
 		else
 		{
-			toggleOnOffDiv.appendChild(document.createTextNode("~Turn blocker OFF"));
+		
+			if (coreWebsiteAddress)
+			{
+				if (isWhitelisted(coreWebsiteAddress))
+				{
+					statusDiv.innerHTML = "Pop Ups Allowed on Site";
+					addOrRemoveDiv.innerHTML = "Forbid <i>" + coreWebsiteAddress + "</i>";
+					addOrRemoveWrapper.style.background = "red";
+					addOrRemoveWrapper.style.display = "block";
+					addOrRemoveDiv.onclick = function(){removeSite(coreWebsiteAddress);};
+				}
+				else
+				{
+					statusDiv.innerHTML = "Pop Ups Forbidden on Site";
+					addOrRemoveDiv.innerHTML = "Allow <i>" + coreWebsiteAddress + "</i>";
+					addOrRemoveWrapper.style.background = "green";
+					addOrRemoveWrapper.style.display = "block";
+					addOrRemoveDiv.onclick = function(){addSite(coreWebsiteAddress);};
+					
+				}						
+			}
+			else	// something wrong with the url
+			{
+				statusDiv.innerHTML = "Unknown";
+				addOrRemoveDiv.appendChild(document.createTextNode("~N/A URL"));
+				addOrRemoveWrapper.style.display = "block";
+				
+			}		
+		
+			toggleOnOffDiv.appendChild(document.createTextNode("Temporarily Allow All"));
+			toggleOnOffDivWrapper.style.display = "block";
 		}
-		toggleOnOffDiv.onclick = function(){toggleOnOff(currState);};		
+		toggleOnOffDiv.onclick = function(){toggleOnOff(currState);};				
 	}
 );
 	
@@ -96,13 +207,14 @@ function removeSite(url) {
 	var urlLowerCase = url.toLowerCase();
 	for (var i = 0; i < whitelist.length; i++)
 	{
-		if (RegExp('^\^', 'i').test(whitelist[i]))
+		if (RegExp('^\\^', 'i').test(whitelist[i]))
 		{
 			isOnList = RegExp(whitelist[i], 'i').test(url);			
 		}
 		else
 		{
 			isOnList = (urlLowerCase.indexOf(whitelist[i].toLowerCase()) == 0);
+			//isOnList = RegExp('^' + whitelist[i], 'i').test(url);
 		}
 		
 		if (isOnList)
@@ -130,6 +242,8 @@ function addSite(url) {
 }
 
 function toggleOnOff(currState) {
+		
+	/*  // For browser action button
 	if (currState == true)
 	{
 		config.set('globalAllowAll', false);
@@ -142,6 +256,9 @@ function toggleOnOff(currState) {
 		chrome.browserAction.setBadgeText({text:String('off')});
 		chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});
 	}
+	*/
+	
+	config.set('globalAllowAll', !currState);
 	
 	checkAndReload();
 	window.close();	

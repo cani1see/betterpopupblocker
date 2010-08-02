@@ -35,3 +35,8 @@ The protection is provided as long as the extension is running and a maximum of 
 Fixed the use of incorrect regular expressions shown on the Options page. Before, the example regular expressions were not correctly escaped,
 but they still whitelisted the sites you want.
 V1.2 will automatically corrects the default regular expressions from older versions. Please check your own regular expressions if you followed the examples.
+
+Better Pop Up Blocker 1.3.0 August 2nd, 2010
+Much better looking whitelister buttons and uses the url bar icon instead of a browser button.
+Reworked the blocking for document.createEvent so that it doesn't interfere with sites using it in whitelist mode.
+Started to convert Better Pop Up Blocker so that it also works as a Safari extension.
