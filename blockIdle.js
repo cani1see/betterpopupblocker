@@ -96,7 +96,7 @@ function extendedTooltips()
 	}	
 }
 
-chrome.extension.sendRequest({url: location.href}, function(settings) {
+chrome.extension.sendRequest({type: "get settings", url: location.href}, function(settings) {
 	if (!settings.enabled)
 	{					    
 		if (settings.blockWindowTargets)

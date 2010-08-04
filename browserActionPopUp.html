@@ -203,41 +203,16 @@ chrome.tabs.getSelected(null,
 	
 
 function removeSite(url) {
-	var whitelist = config.get("whitelist");
-	var urlLowerCase = url.toLowerCase();
-	for (var i = 0; i < whitelist.length; i++)
-	{
-		if (RegExp('^\\^', 'i').test(whitelist[i]))
-		{
-			isOnList = RegExp(whitelist[i], 'i').test(url);			
-		}
-		else
-		{
-			isOnList = (urlLowerCase.indexOf(whitelist[i].toLowerCase()) == 0);
-			//isOnList = RegExp('^' + whitelist[i], 'i').test(url);
-		}
-		
-		if (isOnList)
-		{
-			whitelist.splice(i, 1);
-			isOnList = false;
-		}
-	}
+	removeFromWhitelist(url);
 	
-	// This is inefficient, we are saving the entire list each time
-	config.set("whitelist", whitelist);
-	
-	checkAndReload();
+	checkAndReload(url);
 	window.close();
 }
 
 function addSite(url) {
-	var whitelist = config.get("whitelist");	
-	whitelist.push(url.toLowerCase());
+	addToWhitelist(url);
 	
-	// This is inefficient, we are saving the entire list each time
-	config.set("whitelist", whitelist);
-	checkAndReload();
+	checkAndReload(url);
 	window.close();
 }
 
@@ -260,15 +235,20 @@ function toggleOnOff(currState) {
 	
 	config.set('globalAllowAll', !currState);
 	
-	checkAndReload();
+	checkAndReload("***NOTINWHITELIST***");
 	window.close();	
 }
 
-function checkAndReload() {
+function checkAndReload(url) {
 	var shouldReload = config.get('reloadCurrentTabOnToggle');
 	if (shouldReload)
 	{
-		chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
+		// Reloading by chrome.tabs.executeScript(...) won't work if javascript is not enabled
+		//chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
+		
+		// We can't use chrome.windows.getAll(...) from this page for some reason so we have to do
+		// it from the background page
+		chrome.extension.getBackgroundPage().refreshTabs(url);
 	}
 }
 </script>

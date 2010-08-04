@@ -58,7 +58,15 @@ var obfusParts = [
 ];
 
 injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
-chrome.extension.sendRequest({url: currURL}, coreLogic);
+chrome.extension.sendRequest({type: "get settings", url: currURL}, coreLogic);
+
+if (SAFARI)
+{
+	if (window.top === window)
+	{
+		chrome.extension.sendRequest({type: "safari validate", url: currURL});
+	}
+}
 
 function callCoreLogic(theMessageEvent)
 {
@@ -241,24 +249,35 @@ function coreLogic(settings) {
 		if (settings.blockJSTimers)
 			blockJSTimers();
 	}
-			
+	
+	{
+		var deblockID = "ID_Clean_Up";
+		var deblockParts = [
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i] && ourScript[i].id.indexOf('", 
+			obfusChars, "') === 0){ourScript[i].parentNode.removeChild(ourScript[i]);}}})();"
+		];
+		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
+	}
 }	
 
 
 function inject(f) {
     var script = document.createElement("script");
+	script.type = "text/javascript";
     script.textContent = "(" + f + ")();";
     document.documentElement.appendChild(script);
 }
 
 function injectGlobal(f) {
     var script = document.createElement("script");
+	script.type = "text/javascript";
     script.textContent = f;
     document.documentElement.appendChild(script);
 }
 
 function injectGlobalWithId(f, id) {
     var script = document.createElement("script");
+	script.type = "text/javascript";
 	script.id = id;
     script.textContent = f;
     document.documentElement.appendChild(script);

@@ -27,7 +27,7 @@
 		config.set("whitelist", currWhitelist);
 	}
 	
-	if (config.get('currVersion') < 100300000)
+	if (config.get('currVersion') < 100500000)
 	{	
 		// We used incorrectly escaped regular expressions in versions previous to 1.2 so we are trying
 		// to fix the default ones here	
@@ -39,7 +39,7 @@
 		// We are now able to use the whitelist when closing pop ups from plugins like Flash so we re-enable it for everyone on first run.
 		//config.set('closeAllPopUpWindows', true);
 		
-		config.set('currVersion', 100300000);
+		config.set('currVersion', 100500000);
 	}
 
 	/*	// For browser action button
@@ -64,8 +64,8 @@
 	
 	if (SAFARI)
 	{
-		safari.application.addEventListener("command", performCommand, true);
-		safari.application.addEventListener("validate", validateCommand, true);
+		safari.application.addEventListener("validate", validateCommand, false);
+		safari.application.addEventListener("command", performCommand, false);	
 	}
 	else
 	{
@@ -98,6 +98,7 @@
 				
 			}
 		);	
+		
 	}
 		
 </script>
