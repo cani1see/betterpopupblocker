@@ -26,8 +26,7 @@ var config = {
 config.defaults({
 
     whitelist: ['http://www.hulu.com', 'http://hulu.com', '^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)google\\.[a-z]+($|\\/)', 
-		'^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)', 
-		'^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)pezcyclingnews\\.[a-z]+($|\\/)'],
+		'^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)', '^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)apple\\.[a-z]+($|\\/)'],
 
 	/* This is the old whitelist for versions before 1.2 that have incorrectly escaped regular expressions
     whitelist: ['http://www.hulu.com', 'http://hulu.com', '^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/)', 
@@ -61,25 +60,63 @@ config.defaults({
 	tempList: ""
 });
 
+/*
+Used to determine if a url matches a urlPattern.
+url: URL to be tested. Must be in lower case.
+urlPattern: The pattern to be matched. Must be in lower case.
+
+Returns: Returns true if url starts with urlPattern. If urlPattern starts with a "^", then regular expression matching is used.
+*/
+function patternMatches(url, urlPattern)
+{
+	if (RegExp('^\\^', 'i').test(urlPattern))
+	{
+		return RegExp(urlPattern, 'i').test(url);			
+	}
+	else
+	{
+		return (url.indexOf(urlPattern) == 0);
+		//return RegExp('^' + urlPattern, 'i').test(url);
+	}
+}
+
 function isWhitelisted(url) {
 	var whitelist = config.get("whitelist");
 	var isOnList = false;
 	var urlLowerCase = url.toLowerCase();
 	for (var i = 0; i < whitelist.length; i++)
 	{
-		if (RegExp('^\\^', 'i').test(whitelist[i]))
-		{
-			isOnList = RegExp(whitelist[i], 'i').test(url);			
-		}
-		else
-		{
-			isOnList = (urlLowerCase.indexOf(whitelist[i].toLowerCase()) == 0);
-			//isOnList = RegExp('^' + whitelist[i], 'i').test(url);
-		}
+		isOnList = patternMatches(urlLowerCase, whitelist[i].toLowerCase());
 		
 		if (isOnList)
 			break;
 	}
 	return isOnList;
+}
+
+function addToWhitelist(url) {
+	var whitelist = config.get("whitelist");	
+	whitelist.push(url.toLowerCase());
+	
+	// This is inefficient, we are saving the entire list each time
+	config.set("whitelist", whitelist);	
+}
+
+function removeFromWhitelist(url) {
+	var whitelist = config.get("whitelist");
+	var urlLowerCase = url.toLowerCase();
+	for (var i = 0; i < whitelist.length; i++)
+	{
+		isOnList = patternMatches(urlLowerCase, whitelist[i].toLowerCase());
+		
+		if (isOnList)
+		{
+			whitelist.splice(i, 1);
+			isOnList = false;
+		}
+	}
+	
+	// This is inefficient, we are saving the entire list each time
+	config.set("whitelist", whitelist);
 }
 

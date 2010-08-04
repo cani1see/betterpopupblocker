@@ -83,7 +83,7 @@
     <!-- #header: holds site title and subtitle -->
     <div id="header">
       <h1><span class="big darkBrown">Better Pop Up Blocker</span></h1>
-      <h2><span class="highlight">V1.3.0 - Because you really don't like pop ups</span></h2>
+      <h2><span class="highlight">V1.5.0 - Because you really don't like pop ups</span></h2>
     </div>
 
 
@@ -140,9 +140,12 @@ if they are http or https and regardless of whether its .com, .ca,
 		<input name="closeAllPopUpWindows" id="closeAllPopUpWindows" type="checkbox" />Try
 to close all pop up windows that get through. Mainly for plugins like
 Flash that are not javascript. (***WARNING: Ignores Whitelist***)<br />
-		<input name="reloadCurrentTabOnToggle" id="reloadCurrentTabOnToggle" type="checkbox" />Reload current tab when toggling extension browser button<br />
+		<input name="reloadCurrentTabOnToggle" id="reloadCurrentTabOnToggle" type="checkbox" />Reload matching tabs when toggling extension browser button<br />
 		<input name="extendedTooltips" id="extendedTooltips" type="checkbox" />Show extended tooltips &amp; try to strip javascript on text links<br />
-		<input name="showPageActionButton" id="showPageActionButton" type="checkbox" />Show action button in URL bar for Better Pop Up Blocker (Will take effect on new page loads)<br />
+		<br />
+		<div id="div_showPageActionButton">
+			<input name="showPageActionButton" id="showPageActionButton" type="checkbox" />Show action button in URL bar for Better Pop Up Blocker (Will take effect on new page loads)
+		</div>
 
     </p>
   </div><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonOther" id="saveButtonOther" value="Save Options" class="button" type="button" /></big></big></p><h1><br /></h1><h1>Default Options</h1>To reset the options to the default values, excluding the whitelist, click the two buttons below:<p style="text-align: center;"><big><big><input onclick="this.value='Options Reset. Click Save Options to Save.'; resetOptionsToDefaults();" name="resetOptionsButton" id="resetOptionsButton" value="Reset Options to Defaults" class="button" type="button" /></big></big></p><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonDefaults" id="saveButtonDefaults" value="Save Options" class="button" type="button" /></big></big></p>

@@ -1,5 +1,18 @@
+String.prototype.trim = function () {
+    return this.replace(/^\s*/, "").replace(/\s*$/, "");
+}
+
 function $(id) { return document.getElementById(id); }
-function lines(s) { return s ? s.split('\n') : []; }
+function lines(s) 
+{ 
+	var links = (s ? s.split('\n') : []); 
+	if (links)
+	{
+		for (var i = 0; i < links.length; i++)
+			links[i] = links[i].trim();
+	}
+	return links;
+}
 
 function init() {
     $('whitelist').value = config.get('whitelist').join('\n');
@@ -22,6 +35,13 @@ function init() {
 	$('extendedTooltips').checked = config.get('extendedTooltips');	
 	$('showPageActionButton').checked = config.get('showPageActionButton');
 	
+	if (SAFARI)
+	{
+		$('showPageActionButton').enabled = false;
+		$('showPageActionButton').style.visibility = 'hidden';
+		$('div_showPageActionButton').style.visibility = 'hidden';
+	}	
+	
 	$('blockCreateEvents').checked = config.get('blockCreateEvents');	
 	
 	showReadyButtons();
@@ -29,6 +49,7 @@ function init() {
 
 function save() {
     config.set('whitelist', lines($('whitelist').value));
+	$('whitelist').value = config.get('whitelist').join('\n');
 	
 	config.set('blockWindowOpen', $('blockWindowOpen').checked);	
 	config.set('closeAllPopUpWindows', $('closeAllPopUpWindows').checked);
