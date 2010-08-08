@@ -6,7 +6,7 @@
 	"background_page": "background.html",
 	"options_page": "options.html", 
   
- 	"description": "Improves the Google Chrome pop up blocker by blocking pop up windows opened by javascript & other annoyances that it misses like prompt, alert, and confirm boxes.",
+ 	"description": "Improves the Google Chrome pop up blocker by blocking pop up windows opened by javascript & other annoyances that it misses.",
 	"icons": 
 	{ 
 		"16": "Icon-16.png",
