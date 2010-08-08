@@ -103,7 +103,8 @@ if (SAFARI) {
             var request = messageEvent.message.data;
             var id = chrome.__getTabId(messageEvent.target);
 
-            var sender = { tab: { id: id } };
+			// Added in the url for the sender since Google Chrome has that
+            var sender = { tab: { id: id, url: messageEvent.target.url } };
             var sendResponse = function(dataToSend) {
               var responseMessage = { callbackToken: messageEvent.message.callbackToken, data: dataToSend };
               messageEvent.target.page.dispatchMessage("response", responseMessage);

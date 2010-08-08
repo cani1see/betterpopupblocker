@@ -12,7 +12,13 @@ var config = {
         }
     },
     set: function(key, value) {
-        localStorage[key] = JSON.stringify(value);
+		try {
+			localStorage[key] = JSON.stringify(value);
+		} catch (e) {
+			if (e == QUOTA_EXCEEDED_ERR) {
+				alert('Storage quota exceeded for Better Pop Up Blocker.');
+			}
+		}
     },
     defaults: function(vals) {
         for (var key in vals) {
@@ -33,6 +39,8 @@ config.defaults({
 		'^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)youtube\.[a-z]+($|\/)', '^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)pezcyclingnews\.[a-z]+($|\/)'],
 	*/
 	
+	blacklist: [],
+	
 	globalAllowAll: false,
 	
 	blockWindowOpen: true,
@@ -50,15 +58,47 @@ config.defaults({
 	blockWindowTargets: true,
 	reloadCurrentTabOnToggle: true,
 	
-	extendedTooltips: true,
+	extendedTooltips: false,
+	stripJSFromLinkLocations: true,
 	
-	blockCreateEvents: true,
+	blockCreateEvents: false,
 	
-	currVersion: 0,
+	currVersion: 200000000,
+	currDisplayVersion: "2.0.0",
 	
 	showPageActionButton: true,
-	tempList: ""
+	tempList: "",	// not currently used
+	
+	useBlacklistMode: false
 });
+
+
+var whitelist = config.get('whitelist');
+var blacklist = config.get('blacklist');
+var urlsGloballyAllowed = config.get('globalAllowAll');
+var useBlacklistMode = config.get('useBlacklistMode');
+
+function handleStorageChange(event)
+{
+	if (event.key === "whitelist")
+	{
+		whitelist = config.get('whitelist');
+	}
+	else if (event.key === "blacklist")
+	{
+		blacklist = config.get('blacklist');
+	}
+	else if (event.key === "globalAllowAll")
+	{
+		urlsGloballyAllowed = config.get('globalAllowAll');
+	}
+	else if (event.key === "useBlacklistMode")
+	{
+		useBlacklistMode = config.get('useBlacklistMode');
+	}		
+}
+
+window.addEventListener("storage", handleStorageChange, false);
 
 /*
 Used to determine if a url matches a urlPattern.
@@ -75,18 +115,51 @@ function patternMatches(url, urlPattern)
 	}
 	else
 	{
-		return (url.indexOf(urlPattern) == 0);
-		//return RegExp('^' + urlPattern, 'i').test(url);
+		return (url.toLowerCase().indexOf(urlPattern.toLowerCase()) == 0);
 	}
 }
 
-function isWhitelisted(url) {
-	var whitelist = config.get("whitelist");
-	var isOnList = false;
-	var urlLowerCase = url.toLowerCase();
-	for (var i = 0; i < whitelist.length; i++)
+function isAllowed(url)
+{
+	if (useBlacklistMode)
 	{
-		isOnList = patternMatches(urlLowerCase, whitelist[i].toLowerCase());
+		return !isBlacklisted(url);
+	}
+	else
+	{
+		return isWhitelisted(url);
+	}
+}
+
+function revokeUrl(url)
+{
+	if (useBlacklistMode)
+	{
+		addToBlacklist(url);
+	}
+	else
+	{
+		removeFromWhitelist(url)
+	}
+}
+
+function permitUrl(url)
+{
+	if (useBlacklistMode)
+	{
+		removeFromBlacklist(url);
+	}
+	else
+	{
+		addToWhitelist(url);
+	}
+}
+
+function islisted(list, listName, url) {
+	var isOnList = false;
+	for (var i = 0; i < list.length; i++)
+	{
+		isOnList = patternMatches(url, list[i]);
 		
 		if (isOnList)
 			break;
@@ -94,29 +167,64 @@ function isWhitelisted(url) {
 	return isOnList;
 }
 
-function addToWhitelist(url) {
-	var whitelist = config.get("whitelist");	
-	whitelist.push(url.toLowerCase());
+function addToList(list, listName, url) {	
+	list.push(url.toLowerCase());
 	
 	// This is inefficient, we are saving the entire list each time
-	config.set("whitelist", whitelist);	
+	config.set(listName, list);	
 }
 
-function removeFromWhitelist(url) {
-	var whitelist = config.get("whitelist");
-	var urlLowerCase = url.toLowerCase();
-	for (var i = 0; i < whitelist.length; i++)
+function removeFromList(list, listName, url) {
+	var isOnList = false;
+	for (var i = 0; i < list.length; i++)
 	{
-		isOnList = patternMatches(urlLowerCase, whitelist[i].toLowerCase());
+		isOnList = patternMatches(url, list[i]);
 		
 		if (isOnList)
-		{
-			whitelist.splice(i, 1);
-			isOnList = false;
-		}
+			list.splice(i, 1);
 	}
 	
 	// This is inefficient, we are saving the entire list each time
-	config.set("whitelist", whitelist);
+	config.set(listName, list);
 }
 
+function isWhitelisted(url) {
+	return islisted(whitelist, "whitelist", url);	
+}
+
+function addToWhitelist(url) {	
+	addToList(whitelist, "whitelist", url);
+}
+
+function removeFromWhitelist(url) {
+	removeFromList(whitelist, "whitelist", url);
+}
+
+function isBlacklisted(url) {
+	return islisted(blacklist, "blacklist", url);
+}
+
+function addToBlacklist(url) {	
+	addToList(blacklist, "blacklist", url);
+}
+
+function removeFromBlacklist(url) {
+	removeFromList(blacklist, "blacklist", url);
+}
+
+/*
+Example for http://www.google.com/something.html, this returns http://www.google.com. Returns null if no match is found.
+*/
+function getMainURL(currURL)
+{
+	var splitURL = currURL.match(/^http[s]?:\/\/[^\.]+\.[^\/]+/i);
+	if (splitURL && splitURL.length > 0)
+		return splitURL[0];
+	else
+		return null;	
+}
+
+String.prototype.chunk = function(n) {
+	if (typeof n=='undefined') n=2;
+	return this.match(RegExp('.{1,'+n+'}','g'));
+};

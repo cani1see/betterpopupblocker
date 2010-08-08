@@ -65,7 +65,17 @@ function blockWindowTargets()
 	}	
 }
 
-function extendedTooltips()
+function showExtendedTooltips()
+{
+	var aElements = document.getElementsByTagName('a');
+	for (var i = 0; i < aElements.length; i++) {	
+		aElements[i].title = (aElements[i].href ? ("Link: " + aElements[i].href) : "Link: None")
+			+ (aElements[i].onclick ? ("\n\nOnClick: " + aElements[i].onclick) : "\n\nOnClick: None")
+			+ (aElements[i].title ? ("\n\nDescrip: " + aElements[i].title) : "");
+	}	
+}
+
+function stripJSFromLinkLocations()
 {
 	var aElements = document.getElementsByTagName('a');
 	for (var i = 0; i < aElements.length; i++) {	
@@ -89,14 +99,10 @@ function extendedTooltips()
 					aElements[i].href = possibleURLs[0];
 			}
 		}	
-	
-		aElements[i].title = (aElements[i].href ? ("Link: " + aElements[i].href) : "Link: None")
-			+ (aElements[i].onclick ? ("\n\nOnClick: " + aElements[i].onclick) : "\n\nOnClick: None")
-			+ (aElements[i].title ? ("\n\nDescrip: " + aElements[i].title) : "");
 	}	
 }
 
-chrome.extension.sendRequest({type: "get settings", url: location.href}, function(settings) {
+chrome.extension.sendRequest({type: "get settings block idle", url: location.href}, function(settings) {
 	if (!settings.enabled)
 	{					    
 		if (settings.blockWindowTargets)
@@ -106,7 +112,11 @@ chrome.extension.sendRequest({type: "get settings", url: location.href}, functio
 			blockEditControlIntercept();
 			
 		if (settings.extendedTooltips)
-			extendedTooltips();
+			showExtendedTooltips();
+			
+		if (settings.stripJSFromLinkLocations)
+			stripJSFromLinkLocations();
+		
 	}
 });
 

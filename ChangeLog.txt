@@ -44,3 +44,28 @@ Started to convert Better Pop Up Blocker so that it also works as a Safari exten
 Better Pop Up Blocker 1.5.0 August 4th, 2010
 Reworked the reloading of the tabs after a whitelisting option is made with the whitelister so that the applicable tabs are loaded instead of just one.
 Better Pop Up Blocker now works as a Safari extension using the same code! Next stop is Firefox.
+
+Better Pop Up Blocker 2.0.0 August 8th, 2010
+Tweaked the blocking for pop up windows so that it returns true to the calling scripts. 
+This fools common pop up scripts into thinking a pop up was actually opened, so they won't try to do an in-page overlay.
+
+You can now see up to 3 blocked pop ups (if any) for a page in the whitelister.
+
+Fixed the text overflow and cut off issue in the whitelister.
+
+Iframes now use the more restrictive of the two blocking policies compared to itself and it's hosting window.
+Before the iframe's blocking policy was for it's own url.
+However, blocked pop ups opened by an iframe won't be listed in the whitelister because of a Google Chrome restriction in communications with iframes. 
+This looks like it might be fixed in coming versions of Google Chrome.
+
+Cleaned up the core code to make it more streamlined. Still waiting for Google Chrome and Apple Safari to get better settings access from content scripts.
+For Google Chrome the whitelist/blacklist in the options page now updates live if you keep it open and whitelist/delist sites using the url icon/browser button.
+Apple Safari does not seem to want to live update in the options page. Will have to see what is blocking it.
+
+A blacklist option is now implemented in the options page.
+
+Changed the default blocking for document.createEvents to false to maintain best compatibility with websites. This option has been reset for everyone.
+
+The core code is much more efficient due to tracking some of the local storage change events instead of regenerating all the settings on every new page.
+
+

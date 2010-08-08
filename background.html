@@ -8,45 +8,53 @@
 
 	function fixRegularExpressions()
 	{
-		var currWhitelist = config.get('whitelist');
-		for (var i=0; i < currWhitelist.length; i++)
+		for (var i=0; i < whitelist.length; i++)
 		{	
-			if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/)")
+			if (whitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)google\.[a-z]+($|\/)")
 			{
-				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)google\\.[a-z]+($|\\/)";
+				whitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)google\\.[a-z]+($|\\/)";
 			}
-			else if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)youtube\.[a-z]+($|\/)")
+			else if (whitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)youtube\.[a-z]+($|\/)")
 			{
-				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)";
+				whitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)youtube\\.[a-z]+($|\\/)";
 			}
-			else if (currWhitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)pezcyclingnews\.[a-z]+($|\/)")
+			else if (whitelist[i] == "^(http[s]?:\/\/[a-z0-9\._-]+\.|http[s]?:\/\/)pezcyclingnews\.[a-z]+($|\/)")
 			{
-				currWhitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)pezcyclingnews\\.[a-z]+($|\\/)";
+				whitelist[i] = "^(http[s]?:\\/\\/[a-z0-9\\._-]+\\.|http[s]?:\\/\\/)pezcyclingnews\\.[a-z]+($|\\/)";
 			}
 		}
-		config.set("whitelist", currWhitelist);
+		config.set("whitelist", whitelist);
 	}
 	
-	if (config.get('currVersion') < 100500000)
+	if (config.get('currVersion') < 200000001)
 	{	
+		var currVersion = config.get('currVersion');
+		
 		// We used incorrectly escaped regular expressions in versions previous to 1.2 so we are trying
 		// to fix the default ones here	
-		if (config.get('currVersion') < 100200000)
+		if (currVersion < 100200000)
 		{
 			fixRegularExpressions();
 		}
+
+		if (currVersion < 200000000)
+		{
+			// document.createEvents is often used legitimately, so we are now allowing it by default
+			config.set("blockCreateEvents", false);
+			
+			// The option to show extended tooltips and stripping javascript from links was split so this is reset
+			config.set("extendedTooltips", false);
+		}
 		
-		// We are now able to use the whitelist when closing pop ups from plugins like Flash so we re-enable it for everyone on first run.
-		//config.set('closeAllPopUpWindows', true);
-		
-		config.set('currVersion', 100500000);
+		config.set('currVersion', 200000001);
+		config.set('currDisplayVersion', "2.0.0");
 	}
 
 	/*	// For browser action button
 	config.set('globalAllowAll', false);
 	
 	// Show the current state of the plugin
-	var initialState = config.get('globalAllowAll');
+	var initialState = urlsGloballyAllowed;
 	if (initialState == true)
 	{		
 		chrome.browserAction.setBadgeText({text:String('off')});
@@ -65,15 +73,16 @@
 	if (SAFARI)
 	{
 		safari.application.addEventListener("validate", validateCommand, false);
-		safari.application.addEventListener("command", performCommand, false);	
+		safari.application.addEventListener("command", performCommand, false);
+
+		//safari.application.addEventListener("message", handleMessage, false);		
 	}
 	else
 	{
 		chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 			if (config.get('showPageActionButton'))
-			{
-				var currState = config.get('globalAllowAll');
-				if (currState || isWhitelisted(tab.url))
+			{				
+				if (urlsGloballyAllowed || isAllowed(tab.url))
 				{
 					chrome.pageAction.setIcon({path: "IconAllowed.png", tabId: tab.id});
 				}

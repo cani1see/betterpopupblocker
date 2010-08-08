@@ -15,7 +15,12 @@ function lines(s)
 }
 
 function init() {
-    $('whitelist').value = config.get('whitelist').join('\n');
+	$('highlight').innerText = "Ver. " + config.get('currDisplayVersion') + " - " + $('highlight').innerText;
+	$('useBlacklistMode').checked = config.get('useBlacklistMode');	
+	
+    $('whitelist').value = whitelist.join('\n');
+	$('blacklist').value = blacklist.join('\n');
+	showHideLists();
 	
 	$('blockWindowOpen').checked = config.get('blockWindowOpen');	
 	$('closeAllPopUpWindows').checked = config.get('closeAllPopUpWindows');	
@@ -32,14 +37,16 @@ function init() {
 	$('blockWindowTargets').checked = config.get('blockWindowTargets');	
 	$('reloadCurrentTabOnToggle').checked = config.get('reloadCurrentTabOnToggle');	
 	
-	$('extendedTooltips').checked = config.get('extendedTooltips');	
+	$('extendedTooltips').checked = config.get('extendedTooltips');
+	$('stripJSFromLinkLocations').checked = config.get('stripJSFromLinkLocations');
+	
 	$('showPageActionButton').checked = config.get('showPageActionButton');
 	
 	if (SAFARI)
 	{
 		$('showPageActionButton').enabled = false;
-		$('showPageActionButton').style.visibility = 'hidden';
-		$('div_showPageActionButton').style.visibility = 'hidden';
+		$('showPageActionButton').style.display = 'none';
+		$('div_showPageActionButton').style.display = 'none';
 	}	
 	
 	$('blockCreateEvents').checked = config.get('blockCreateEvents');	
@@ -48,8 +55,13 @@ function init() {
 }
 
 function save() {
+	config.set('useBlacklistMode', $('useBlacklistMode').checked);
+	
     config.set('whitelist', lines($('whitelist').value));
 	$('whitelist').value = config.get('whitelist').join('\n');
+	
+    config.set('blacklist', lines($('blacklist').value));
+	$('blacklist').value = config.get('blacklist').join('\n');	
 	
 	config.set('blockWindowOpen', $('blockWindowOpen').checked);	
 	config.set('closeAllPopUpWindows', $('closeAllPopUpWindows').checked);
@@ -67,9 +79,25 @@ function save() {
 	config.set('reloadCurrentTabOnToggle', $('reloadCurrentTabOnToggle').checked);	
 	
 	config.set('extendedTooltips', $('extendedTooltips').checked);	
+	config.set('stripJSFromLinkLocations', $('stripJSFromLinkLocations').checked);	
+
 	config.set('showPageActionButton', $('showPageActionButton').checked);	
 	
 	config.set('blockCreateEvents', $('blockCreateEvents').checked);	
 	
 	showSavedButtons();
 }
+
+function handleStorageChangeUpdateLists(event)
+{
+	if (event.key === "whitelist")
+	{
+		$('whitelist').value = config.get('whitelist').join('\n');
+	}
+	else if (event.key === "blacklist")
+	{
+		$('blacklist').value = config.get('blacklist').join('\n');
+	}	
+}
+
+window.addEventListener("storage", handleStorageChangeUpdateLists, false);

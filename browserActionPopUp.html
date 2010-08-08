@@ -6,11 +6,12 @@
 		<title>Extension Action</title> 
 		<style> 
 			#wrapper {
-				width:300px;
+				width:302px;
 				margin:0px auto;
 				padding:2px 0px;
 				background: #EEE;
 				display:none;
+				overflow:auto;
 				-moz-border-radius:5px;
 				-webkit-border-radius:5px;
 				-o-border-radius:5px;
@@ -34,7 +35,15 @@
 				margin:0px auto;
 				padding:2px 0px;
 				background: #f5f5f5;
+			}
 
+			#wrapperSpacer {
+				width:310px;
+				height:15px;
+				margin:0px auto;
+				padding:5px 0px;
+				background: #f5f5f5;
+				display:none;
 			}			
 
 			#status {
@@ -80,10 +89,15 @@
 				
 				cursor: pointer;
 				
-				width:300px;
-				padding:10px 0px;
+				width:290px;
+				padding:10px 5px;
 				border:1px solid #DDD;
 				text-align:center;
+				
+				white-space: wrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				
                 display:block;
 				-moz-border-radius:5px;
 				-webkit-border-radius:5px;
@@ -112,16 +126,66 @@
 				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#003C82), to(#4195DD));
 				background:-moz-linear-gradient(0% 90% 90deg, #4195DD, #003C82);
 			}
- 
 			div.button.notransitions {
 				-webkit-transition: none;
 				-moz-transition: none;
 				-o-transition: none;
 				transition: none;
-			}
-			
+			}		
 		</style> 
-		
+		<style> 
+			div.ubutton {
+				font-family: 'Arial', arial, serif;
+				font-size:12px;
+				color:#000;
+				text-decoration:none;
+				
+				cursor: pointer;
+				
+				width:290px;
+				padding:5px 5px;
+				border:1px solid #DDD;
+				text-align:center;
+				
+				white-space: wrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				
+                display:block;
+				-moz-border-radius:5px;
+				-webkit-border-radius:5px;
+				-o-border-radius:5px;
+				border-radius:5px;
+ 
+				background:#FFFFFF;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFFFFF), to(#EEE));
+				background:-moz-linear-gradient(0% 90% 90deg, #EEE, #FFF);
+ 
+				-webkit-transition: all .4s ease-in-out;
+				-moz-transition: all .4s ease-in-out;
+				-o-transition: all .4s ease-in-out;
+				transition: all .4s ease-in-out;
+			}
+			div.ubutton:hover {
+				color:#fff;
+				border-color:#3278BE;
+ 
+				background:#4195DD;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#4195DD), to(#003C82));
+				background:-moz-linear-gradient(0% 90% 90deg, #003C82, #4195DD);
+			}
+			div.ubutton:active {
+				background:#4195DD;
+				background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#003C82), to(#4195DD));
+				background:-moz-linear-gradient(0% 90% 90deg, #4195DD, #003C82);
+			}
+			div.ubutton.notransitions {
+				-webkit-transition: none;
+				-moz-transition: none;
+				-o-transition: none;
+				transition: none;
+			}		
+		</style> 		
 </head>
 <body>
 
@@ -131,9 +195,26 @@
 <div id="wrapperPriority">
 	<div onclick="" id="addOrRemove" name="addOrRemove" class="button notransitions"></div>  		
 </div> 	
+
 <div id="wrapper">
 	<div onclick="" id="toggleOnOff" name="toggleOnOff" class="button notransitions"></div>  		
 </div> 
+
+<div id="wrapperSpacer">
+</div> 
+
+<div id="wrapper">
+	<div onclick="" id="lastBlocked1" name="lastBlocked1" class="ubutton notransitions"></div>  		
+</div> 
+
+<div id="wrapper">
+	<div onclick="" id="lastBlocked2" name="lastBlocked2" class="ubutton notransitions"></div>  		
+</div> 
+
+<div id="wrapper">
+	<div onclick="" id="lastBlocked3" name="lastBlocked3" class="ubutton notransitions"></div>  		
+</div> 
+
 
 <script type = "text/javascript">
 chrome.tabs.getSelected(null, 
@@ -147,17 +228,10 @@ chrome.tabs.getSelected(null,
 		var toggleOnOffDiv = document.getElementById("toggleOnOff");
 		var toggleOnOffDivWrapper = toggleOnOffDiv.parentNode;
 		
-		var splitURL = tab.url.toLowerCase().match(/^http[s]?:\/\/[^\.]+\.[^\/]+/i);
-		var coreWebsiteAddress = null;
-		if (splitURL != null && splitURL.length > 0)
-		{
-			coreWebsiteAddress = splitURL[0];
-		}
-		
-		var currState = config.get('globalAllowAll');
+		var coreWebsiteAddress = getMainURL(tab.url);
 			
 		// Toggling on/off
-		if (currState)
+		if (urlsGloballyAllowed)
 		{
 			statusDiv.innerHTML = "All Pop Ups Temporarily Allowed on New Page Loads";
 			toggleOnOffDiv.appendChild(document.createTextNode("Revoke All Temporary"));
@@ -168,10 +242,10 @@ chrome.tabs.getSelected(null,
 		
 			if (coreWebsiteAddress)
 			{
-				if (isWhitelisted(coreWebsiteAddress))
+				if (isAllowed(coreWebsiteAddress))
 				{
 					statusDiv.innerHTML = "Pop Ups Allowed on Site";
-					addOrRemoveDiv.innerHTML = "Forbid <i>" + coreWebsiteAddress + "</i>";
+					addOrRemoveDiv.innerHTML = "Forbid<br/><i>" + coreWebsiteAddress + "</i>";
 					addOrRemoveWrapper.style.background = "red";
 					addOrRemoveWrapper.style.display = "block";
 					addOrRemoveDiv.onclick = function(){removeSite(coreWebsiteAddress);};
@@ -179,11 +253,13 @@ chrome.tabs.getSelected(null,
 				else
 				{
 					statusDiv.innerHTML = "Pop Ups Forbidden on Site";
-					addOrRemoveDiv.innerHTML = "Allow <i>" + coreWebsiteAddress + "</i>";
+					addOrRemoveDiv.innerHTML = "Allow<br/><i>" + coreWebsiteAddress + "</i>";
 					addOrRemoveWrapper.style.background = "green";
 					addOrRemoveWrapper.style.display = "block";
 					addOrRemoveDiv.onclick = function(){addSite(coreWebsiteAddress);};
 					
+					// This sendRequest only goes to the top level window of the tab, ie: not to iFrames
+					chrome.tabs.sendRequest(tab.id, {type: "get last blocked"}, showLastBlocked);				
 				}						
 			}
 			else	// something wrong with the url
@@ -197,29 +273,98 @@ chrome.tabs.getSelected(null,
 			toggleOnOffDiv.appendChild(document.createTextNode("Temporarily Allow All"));
 			toggleOnOffDivWrapper.style.display = "block";
 		}
-		toggleOnOffDiv.onclick = function(){toggleOnOff(currState);};				
+		toggleOnOffDiv.onclick = function(){toggleOnOff(urlsGloballyAllowed);};				
 	}
 );
+
+function showLastBlocked(response)
+{
+	var lastBlockedDivs = new Array();
+	var lastBlockedDivWrappers = new Array();
 	
+	lastBlockedDivs.push(document.getElementById("lastBlocked1"));
+	lastBlockedDivWrappers.push(document.getElementById("lastBlocked1").parentNode);
+	lastBlockedDivs.push(document.getElementById("lastBlocked2"));
+	lastBlockedDivWrappers.push(document.getElementById("lastBlocked2").parentNode);
+	lastBlockedDivs.push(document.getElementById("lastBlocked3"));	
+	lastBlockedDivWrappers.push(document.getElementById("lastBlocked3").parentNode);
+	
+	var spacerDiv = document.getElementById("wrapperSpacer");
+	
+	if (response.error)
+	{
+		spacerDiv.style.display = "block";
+		spacerDiv.innerHTML = "<hr/>";
+		lastBlockedDivs[0].innerHTML = "<b>Open Blocked Pop Up Error</b><br/><i>" + response.error.description + "</i>";
+		lastBlockedDivWrappers[0].style.display = "block";	
+	}
+	else
+	{
+		if (response.url)
+		{
+			var spacerDisplayed = false;
+			for (var i = 0; i < response.url.length && i < lastBlockedDivs.length; i++)
+			{
+				var currBlockedURL = response.url[i];
+				if (getMainURL(currBlockedURL))
+				{
+					if (!spacerDisplayed)
+					{
+						spacerDiv.style.display = "block";
+						spacerDiv.innerHTML = "<hr/>";
+						spacerDisplayed = true;
+					}
+					
+					currBlockedURL = encodeURI(currBlockedURL.trim());
+					
+					const maxLines = 2;
+					var urlChunks = currBlockedURL.chunk(45);
+					var theMessage = "";
+
+					for (var j = 0; j < maxLines && j < urlChunks.length; j++)
+					{
+						theMessage += (urlChunks[j] + "<br/>");
+					}
+					
+					if (urlChunks.length > maxLines)
+					{
+						var lastChunk = urlChunks[3].chunk(35);
+						theMessage += (lastChunk[0] + "......<br/>");
+					}
+	
+					lastBlockedDivs[i].innerHTML = "<b>Open Blocked Pop Up</b><br/><i>" + theMessage + "</i>";
+					lastBlockedDivWrappers[i].style.display = "block";
+					lastBlockedDivWrappers[i].setAttribute("data-url", currBlockedURL);
+					lastBlockedDivWrappers[i].onclick = function(){openTab(this);};
+				}
+			}
+		}
+	}
+}
+
+function openTab(divCaller)
+{
+	chrome.tabs.create({url: divCaller.getAttribute("data-url"), selected: true});
+}	
 
 function removeSite(url) {
-	removeFromWhitelist(url);
+	revokeUrl(url);
 	
 	checkAndReload(url);
 	window.close();
 }
 
 function addSite(url) {
-	addToWhitelist(url);
+	permitUrl(url);
 	
 	checkAndReload(url);
 	window.close();
 }
 
-function toggleOnOff(currState) {
+function toggleOnOff(urlsGloballyAllowed) {
 		
 	/*  // For browser action button
-	if (currState == true)
+	if (urlsGloballyAllowed == true)
 	{
 		config.set('globalAllowAll', false);
 		chrome.browserAction.setBadgeText({text:String('on')});
@@ -233,7 +378,7 @@ function toggleOnOff(currState) {
 	}
 	*/
 	
-	config.set('globalAllowAll', !currState);
+	config.set('globalAllowAll', !urlsGloballyAllowed);
 	
 	checkAndReload("***NOTINWHITELIST***");
 	window.close();	
@@ -243,7 +388,7 @@ function checkAndReload(url) {
 	var shouldReload = config.get('reloadCurrentTabOnToggle');
 	if (shouldReload)
 	{
-		// Reloading by chrome.tabs.executeScript(...) won't work if javascript is not enabled
+		// Reloading by chrome.tabs.executeScript(...). Works with or without javascript enabled.
 		//chrome.tabs.executeScript(null, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});
 		
 		// We can't use chrome.windows.getAll(...) from this page for some reason so we have to do
