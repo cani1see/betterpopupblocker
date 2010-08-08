@@ -53,6 +53,8 @@
 
 	function resetOptionsToDefaults()
 	{
+		$("useBlacklistMode").checked = false;
+	
 		$("blockWindowOpen").checked = true;
 		$("blockWindowPrompts").checked = true;
 		$("blockJSSelection").checked = true;
@@ -60,16 +62,35 @@
 		$("blockWindowMovingAndResize").checked = true;
 		$("blockJSPrint").checked = true;
 		$("blockOnUnload").checked = true;
-		$("blockCreateEvents").checked = true;
+		$("blockCreateEvents").checked = false;
 		$("blockWindowTargets").checked = true;
 		$("blockUnescapeEval").checked = false;
 		$("blockJSTimers").checked = false;
 		
 		$("closeAllPopUpWindows").checked = false;
 		$("reloadCurrentTabOnToggle").checked = true;
-		$("extendedTooltips").checked = true;
+		$("extendedTooltips").checked = false;
+		$("stripJSFromLinkLocations").checked = true;
+		
 		$("showPageActionButton").checked = true;
 
+	}
+	
+	function showHideLists()
+	{
+		var whitelistInput = document.getElementById("whitelistInput");
+		var blacklistInput = document.getElementById("blacklistInput");
+		
+		if ($("useBlacklistMode").checked)
+		{
+			whitelistInput.style.display = "none";
+			blacklistInput.style.display = "block";
+		}
+		else
+		{
+			whitelistInput.style.display = "block";
+			blacklistInput.style.display = "none";
+		}
 	}
   </script></head>
 <body onload="init();">
@@ -83,9 +104,8 @@
     <!-- #header: holds site title and subtitle -->
     <div id="header">
       <h1><span class="big darkBrown">Better Pop Up Blocker</span></h1>
-      <h2><span class="highlight">V1.5.0 - Because you really don't like pop ups</span></h2>
+      <h2><span id="highlight" class="highlight">Because you really don't like pop ups</span></h2>
     </div>
-
 
 
     <!-- #menu: topbar menu of the site.  Use the helper classes .two, .three, .four and .five to set
@@ -100,7 +120,17 @@
     <!-- #page: holds all page content, as well as footer -->
     <div id="page">
 
-      <h1>Whitelist Web Sites</h1><p style="text-align: left;"><textarea name="whitelist" id="whitelist" cols="80" rows="20"></textarea>
+	  <div id="whitelistInput" class="whitelistInput" style="display:none;">
+		<h1>Whitelist Web Sites</h1><p style="text-align: left;"><textarea name="whitelist" id="whitelist" cols="80" rows="20"></textarea>
+	  </div>
+	  
+	  <div id="blacklistInput" class="blacklistInput" style="display:none;">
+	    <h1>Blacklist Web Sites</h1><p style="text-align: left;"><textarea name="blacklist" id="blacklist" cols="80" rows="20"></textarea>
+	  </div>
+	  
+		
+	  <input name="useBlacklistMode" id="useBlacklistMode" type="checkbox" onchange="showHideLists();" />Use blacklist mode. (Pop ups allowed by default. Refresh web pages to take effect when changing this option.)	
+
   
   </p><p style="text-align: center;"><big><big><input onclick="save();" name="saveButtonTop" id="saveButtonTop" value="Save Options" class="button" type="button" /></big></big></p><p>
     To whitelist, enter the address of the web site (one per line).
@@ -124,10 +154,10 @@ if they are http or https and regardless of whether its .com, .ca,
 		<input name="blockJSContextMenuAndClickIntercept" id="blockJSContextMenuAndClickIntercept" type="checkbox" />Javascript context menu, cut/copy/paste, &amp; click intercept<br />
 		<input name="blockWindowMovingAndResize" id="blockWindowMovingAndResize" type="checkbox" />Automatically moving &amp; resizing windows<br />		
 		<input name="blockJSPrint" id="blockJSPrint" type="checkbox" />Print dialogues opened by javascript<br />		
-		<input name="blockOnUnload" id="blockOnUnload" type="checkbox" />Fire events on unload (leaving a web page)<br />
-		<input name="blockCreateEvents" id="blockCreateEvents" type="checkbox" />Javascript mouse click and keystroke simulation (document.createEvent)<br />
-		<input name="blockWindowTargets" id="blockWindowTargets" type="checkbox" />Window targets (checking this forces pages to load in the same tab)<br />	
-		<input name="blockUnescapeEval" id="blockUnescapeEval" type="checkbox" />Unescape &amp; eval (used to obfuscate code)<br />
+		<input name="blockOnUnload" id="blockOnUnload" type="checkbox" />Fire events on unload (Leaving a web page)<br />
+		<input name="blockCreateEvents" id="blockCreateEvents" type="checkbox" />document.createEvent (Can be used to simulate the mouse and keyboard)<br />
+		<input name="blockWindowTargets" id="blockWindowTargets" type="checkbox" />Window targets (Checking this forces pages to load in the same tab)<br />	
+		<input name="blockUnescapeEval" id="blockUnescapeEval" type="checkbox" />Unescape &amp; eval (Used to obfuscate code)<br />
 		<input name="blockJSTimers" id="blockJSTimers" type="checkbox" />Javascript timers
 		
     </p>
@@ -141,7 +171,8 @@ if they are http or https and regardless of whether its .com, .ca,
 to close all pop up windows that get through. Mainly for plugins like
 Flash that are not javascript. (***WARNING: Ignores Whitelist***)<br />
 		<input name="reloadCurrentTabOnToggle" id="reloadCurrentTabOnToggle" type="checkbox" />Reload matching tabs when toggling extension browser button<br />
-		<input name="extendedTooltips" id="extendedTooltips" type="checkbox" />Show extended tooltips &amp; try to strip javascript on text links<br />
+		<input name="extendedTooltips" id="extendedTooltips" type="checkbox" />Show extended tooltips on links<br />
+		<input name="stripJSFromLinkLocations" id="stripJSFromLinkLocations" type="checkbox" />Strip javascript from link locations to make them like regular links to help make them work when they can't open pop ups<br />
 		<br />
 		<div id="div_showPageActionButton">
 			<input name="showPageActionButton" id="showPageActionButton" type="checkbox" />Show action button in URL bar for Better Pop Up Blocker (Will take effect on new page loads)

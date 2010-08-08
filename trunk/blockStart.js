@@ -23,113 +23,220 @@
 // and will let other javascript code execute while it's waiting. 
 // We also remove the javascript we inject into the page using a special trick so that others cannot parse the page 
 // and see our variable names in the global space that can be used to try to bypass our blocker.
-// I hope Google Chrome will implement the canLoad synchronous function that Apple Safari has so that I don't need to use the global space.
-var currURL = window.location.href;
-var obfusChars = "BPUB" + randomID(20);
+// I hope Google Chrome and Apple Safari will get a better way to access settings from user scripts because even canLoad doesn't apply here.
 
-var obfusPartsID = "ID_Block_First";
-var obfusParts = [
-	obfusChars, "windowOpen=window.open;window.open=null;",
-	obfusChars, "windowShowModelessDialog=window.showModelessDialog;window.showModelessDialog=null;",
-	obfusChars, "windowShowModalDialog=window.showModalDialog;window.showModalDialog=null;",
+// First generate random id's for our function pointers
+const nameWindowOpen = randomID();
+const nameWindowShowModelessDialog = randomID();
+const nameWindowShowModalDialog = randomID();
+const nameWindowPrompt = randomID();
+const nameWindowConfirm = randomID();
+const nameWindowAlert = randomID();	
+const nameWindowMoveTo = randomID();
+const nameWindowMoveBy = randomID();
+const nameWindowResizeTo = randomID();
+const nameWindowResizeBy = randomID();
+const nameWindowScrollBy = randomID();
+const nameWindowScrollTo = randomID();
+const nameWindowBlur = randomID();
+const nameWindowFocus = randomID();
+const nameDocumentGetSelection = randomID();
+const nameWindowGetSelection = randomID();
+const nameWindowOnUnLoad = randomID();
+const nameWindowPrint = randomID();
+
+var namesLastBlockedOpenDiv = new Array();
+const numRememberLastBlocked = 3;
+for (var i = 0; i < numRememberLastBlocked; i++)
+{
+	namesLastBlockedOpenDiv.push(randomID());
+}
+const classLastBlockedOpenDiv = randomID();
+
+const obfusPartsID = randomID();
+
+// Next, we create and javascript to inject into the current page to create the function pointers
+var obfusParts1 = [
+	nameWindowOpen + "=window.open;",
+	nameWindowShowModelessDialog + "=window.showModelessDialog;",
+	nameWindowShowModalDialog + "=window.showModalDialog;",
 	
-	obfusChars, "windowPrompt=window.prompt;window.prompt=null;", 
-	obfusChars, "windowConfirm=window.confirm;window.confirm=null;", 
-	obfusChars, "windowAlert=window.alert;window.alert=null;",
+	nameWindowPrompt + "=window.prompt;", 
+	nameWindowConfirm + "=window.confirm;", 
+	nameWindowAlert + "=window.alert;",
 	
-	obfusChars, "windowMoveTo=window.moveTo;window.moveTo=null;",	
-	obfusChars, "windowMoveBy=window.moveBy;window.moveBy=null;",
-	obfusChars, "windowResizeTo=window.resizeTo;window.resizeTo=null;",
-	obfusChars, "windowResizeBy=window.resizeBy;window.resizeBy=null;",
-	obfusChars, "windowScrollBy=window.scrollBy;window.scrollBy=null;",
-	obfusChars, "windowScrollTo=window.scrollTo;window.scrollTo=null;",
-	obfusChars, "windowBlur=window.blur;window.blur=null;",
-	obfusChars, "windowFocus=window.focus;window.focus=null;",
+	nameWindowMoveTo + "=window.moveTo;",	
+	nameWindowMoveBy + "=window.moveBy;",
+	nameWindowResizeTo + "=window.resizeTo;",
+	nameWindowResizeBy + "=window.resizeBy;",
+	nameWindowScrollBy + "=window.scrollBy;",
+	nameWindowScrollTo + "=window.scrollTo;",
+	nameWindowBlur + "=window.blur;",
+	nameWindowFocus + "=window.focus;",
 	
-	obfusChars, "documentGetSelection=document.getSelection;document.getSelection=null;",
-	obfusChars, "windowGetSelection=window.getSelection;window.getSelection=null;",
+	nameDocumentGetSelection + "=document.getSelection;",
+	nameWindowGetSelection + "=window.getSelection;",
 	
-	obfusChars, "windowOnUnLoad=window.onunload;window.onunload=null;",
+	nameWindowOnUnLoad + "=window.onunload;",
 	
-	obfusChars, "windowPrint=window.print;window.print=null;"
-	
-	/*,
-	obfusChars, "documentCreateEvent=document.createEvent;document.createEvent=null;"*/
+	nameWindowPrint + "=window.print;"	
 ];
 
-injectGlobalWithId(obfusParts.join(""), obfusChars + obfusPartsID);
-chrome.extension.sendRequest({type: "get settings", url: currURL}, coreLogic);
+// Dummy place holders to increase the numbers
+var numDummies = 5 + Math.floor(Math.random() * 11);	// minimum 5, max 15
+for (var i = 0; i < numDummies; i++)
+{
+	obfusParts1.push(randomID() + "=new Function();");
+}
 
+// Randomize the order of our function pointers in memory
+fisherYatesShuffle(obfusParts1);
+
+// The part of the javascript that sets the current javascript functions to null and cleans up the code
+var obfusParts2 = [
+	"window.open=null;window.showModelessDialog=null;window.showModalDialog=null;window.prompt=null;window.confirm=null;window.alert=null;",
+	"window.moveTo=null;window.moveBy=null;window.resizeTo=null;window.resizeBy=null;window.scrollBy=null;window.scrollTo=null;window.blur=null;window.focus=null;",
+	"document.getSelection=null;window.getSelection=null;window.onunload=null;window.print=null;",
+	
+	"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id && ourScript[i].id === '", 
+	obfusPartsID, "'){ourScript[i].parentNode.removeChild(ourScript[i]);break;}}})();"
+];
+
+// Now we inject the javascript into the page
+injectGlobalWithId(obfusParts1.join("") + obfusParts2.join(""), obfusPartsID);
+
+// In Safari, we have to make a call to tell the browser to update the browser button or it will show the wrong one on load of a new page
+var firstBeforeLoad = true;
 if (SAFARI)
 {
+	// Get the settings by catching the beforeload event for an Object
+	// This method doesn't fulfil our needs of getting the settings back from the background page before
+	// other scripts execute.
+	//document.addEventListener("beforeload", handleBeforeLoadEvent, true);
+	
 	if (window.top === window)
 	{
-		chrome.extension.sendRequest({type: "safari validate", url: currURL});
+		chrome.extension.sendRequest({type: "safari validate", url: window.location.href});
 	}
 }
-
-function callCoreLogic(theMessageEvent)
+// Uncomment "else" below if testing the "beforeload" method for getting settings
+//else	
 {
-   if (theMessageEvent.name === "safari all settings") {
-      coreLogic(theMessageEvent.message);
-   }
+	// Call our background page and get the settings.
+	// sendRequest is asynchronous so some things may load while we wait.
+	//if (window.top === window)
+		chrome.extension.sendRequest({type: "get settings block start", url: window.location.href}, coreLogic);
+	//else	// Google Chrome doesn't let us get the parent frame url
+		//chrome.extension.sendRequest({type: "get settings block start", url: top.window.location}, coreLogic);
 }
 
-function coreLogic(settings) {
-	
-	if (!settings.enabled && settings.blockWindowOpen)
+/*
+For Safari only when using the "beforeload" method.
+*/
+function handleBeforeLoadEvent(event)
+{
+	if (SAFARI && firstBeforeLoad)
 	{
-		//blockWindowOpen();
+		firstBeforeLoad = false;
+		var theSettings = safari.self.tab.canLoad(event, {type: "get settings block start", url: window.location.href});
+		coreLogic(theSettings);
 	}
-	else
+}
+
+/*
+Takes the settings and unblocks our blocked javascript functions as necessary.
+Also, it blocks those javascript functions we didn't block at the very beginning of this script for website compatibility reasons.
+settins: A json object containing our settings.
+*/
+function coreLogic(settings) {
+	var deblockingScripts = new Array();
+	
+	if (settings.enabled || !settings.blockWindowOpen)
 	{ 
-		var nameMaxCount = obfusChars + "maxWindowsOpen";
-		var nameWindowsOpenCount = obfusChars + "windowsOpenCount";
-		var nameWindowOpen = obfusChars + "windowOpen";
-		var nameWindowShowModelessDialog = obfusChars + "windowShowModelessDialog";
-		var nameWindowShowModalDialog = obfusChars + "windowShowModalDialog";
-		
-		var deblockID = "ID_Unblock_WindowOpen";
+		var nameMaxCount = randomID();
+		var nameWindowsOpenCount = randomID();
+
 		var deblockParts = [
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
-
+			
 			"window.open = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 2) return ", 
 			nameWindowOpen, "(arguments[0], arguments[1]); else if (arguments.length == 3) return ", nameWindowOpen, 
-			"(arguments[0], arguments[1], arguments[2]);} return null; };",	
+			"(arguments[0], arguments[1], arguments[2]);} return true; };",	
 
 			"window.showModelessDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
 			"if (arguments.length == 1) return ", nameWindowShowModelessDialog, "(arguments[0]); ",
 			"else if (arguments.length == 2) return ", nameWindowShowModelessDialog, "(arguments[0], arguments[1]); ", 
-			"else if (arguments.length == 3) return ", nameWindowShowModelessDialog, "(arguments[0], arguments[1], arguments[2]);} return null; };",		
+			"else if (arguments.length == 3) return ", nameWindowShowModelessDialog, "(arguments[0], arguments[1], arguments[2]);} return true; };",		
 
 			"window.showModalDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
 			"if (arguments.length == 1) return ", nameWindowShowModalDialog, "(arguments[0]); ",
 			"else if (arguments.length == 2) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1]); ", 
-			"else if (arguments.length == 3) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1], arguments[2]);} return null; };",				
-		
-			/* Old unsafe method
-			"window.open=", obfusChars, "windowOpen;",
-			"window.showModelessDialog=", obfusChars, "windowShowModelessDialog;",
-			"window.showModalDialog=", obfusChars, "windowShowModalDialog;"
-			*/
+			"else if (arguments.length == 3) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1], arguments[2]);} return true; };",				
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);		
-	}
 		
-	if (!settings.enabled && settings.blockWindowPrompts)
-	{
-		//blockWindowPrompts();
+		deblockingScripts.push(deblockParts.join(""));
 	}
-	else
-	{  
-		var nameMaxCount = obfusChars + "maxDialogs";
-		var nameWindowAlertsPromptsCount = obfusChars + "windowAlertsPromptsCount";
-		var nameWindowPrompt = obfusChars + "windowPrompt";
-		var nameWindowConfirm = obfusChars + "windowConfirm";
-		var nameWindowAlert = obfusChars + "windowAlert";		
+	else	// We want to block, so clear unneeded variables.
+	{ 
+		for (var i = 0; i < numRememberLastBlocked; i++)
+		{
+			var lastBlockedDiv = document.createElement('div');
+			//lastBlockedDiv.style.visibility = 'hidden';	// Don't do this. We can't get the innerText afterwards.
+			lastBlockedDiv.style.display = 'none';	// This makes the div hidden but the text is still retrievable.
+			lastBlockedDiv.id = namesLastBlockedOpenDiv[i];
+			lastBlockedDiv.className = classLastBlockedOpenDiv;
+			lastBlockedDiv.innerHTML = '';
+			lastBlockedDiv.innerText = ''; 
+			document.documentElement.appendChild(lastBlockedDiv);
+		}
+		
+		// Uncomment the following if we need to see that a block has been done right away
+		/*
+		const nameLastBlockedOpenEvent = randomID();
+		document.getElementById(nameLastBlockedOpen1Div).addEventListener(nameLastBlockedOpenEvent, function() {
+			var lastBlocked = document.getElementById(nameLastBlockedOpen1Div).innerText;
+		});	
+		*/
 	
-		var deblockID = "ID_Unblock_WindowPrompts";
+		var nameMaxCount = randomID();
+		var nameWindowsOpenCount = randomID();
+		
+		var deblockParts = [
+			"const ", nameMaxCount, "=30;",
+			"var ", nameWindowsOpenCount, "=0;",
+			
+			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 2 || arguments.length == 3) {", 
+			"switch (", nameWindowsOpenCount, " % 3) {",
+			"case 0: ", namesLastBlockedOpenDiv[0], ".innerText = arguments[0]; break;",
+			"case 1: ", namesLastBlockedOpenDiv[1], ".innerText = arguments[0]; break;",
+			"case 2: ", namesLastBlockedOpenDiv[2], ".innerText = arguments[0]; break; }",
+			// Uncomment the following if we need to see that a block has been done right away
+			//"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
+			//"', true, true); ", namesLastBlockedOpenDiv[0], ".dispatchEvent(customEvent);",
+			"} } return true; } catch(err) {return true;} };",	
+
+			"window.showModelessDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 1 || arguments.length == 2 || arguments.length == 3) ", 
+			namesLastBlockedOpenDiv[0], ".innerText = arguments[0];",
+			"} return true; } catch(err) {return true;} };",			
+			
+			"window.showModalDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 1 || arguments.length == 2 || arguments.length == 3) ", 
+			namesLastBlockedOpenDiv[0], ".innerText = arguments[0];",
+			"} return true; } catch(err) {return true;} };",
+			
+			nameWindowOpen, "=new Function();",
+			nameWindowShowModelessDialog, "=new Function();",
+			nameWindowShowModalDialog, "=new Function();"
+		];
+
+		deblockingScripts.push(deblockParts.join(""));
+	}
+	
+	if (settings.enabled || !settings.blockWindowPrompts)
+	{  
+		var nameMaxCount = randomID();
+		var nameWindowAlertsPromptsCount = randomID();	
+	
 		var deblockParts = [
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowAlertsPromptsCount, "=0;",
@@ -141,127 +248,162 @@ function coreLogic(settings) {
 			nameWindowConfirm, "(confirmText);} return null;};",			
 			
 			"window.alert = function (alertText) { if(", nameWindowAlertsPromptsCount, " < ", nameMaxCount, ") {", nameWindowAlertsPromptsCount, "++; ", 
-			nameWindowAlert, "(alertText);} };",									
-			
-			/* Old unsafe method
-			"window.prompt=", obfusChars, "windowPrompt;",
-			"window.confirm=", obfusChars, "windowConfirm;",
-			"window.alert=", obfusChars, "windowAlert;"
-			*/
+			nameWindowAlert, "(alertText);} return true;};",									
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
-	}
-
-	if (!settings.enabled && settings.blockWindowMovingAndResize)
-	{
-		//blockWindowMovingAndResize();
+		deblockingScripts.push(deblockParts.join(""));	
 	}
 	else
-	{
-		var deblockID = "ID_Unblock_WindowMovingAndResize";
+	{  
 		var deblockParts = [
-			"window.moveTo=", obfusChars, "windowMoveTo;",
-			"window.moveBy=", obfusChars, "windowMoveBy;",
-			"window.resizeTo=", obfusChars, "windowResizeTo;",
-			"window.resizeBy=", obfusChars, "windowResizeBy;",
-			"window.scrollBy=", obfusChars, "windowScrollBy;",
-			"window.scrollTo=", obfusChars, "windowScrollTo;",
-			"window.blur=", obfusChars, "windowBlur;",
-			"window.focus=", obfusChars, "windowFocus;"
+			nameWindowPrompt, "=new Function();",
+			nameWindowConfirm, "=new Function();",
+			nameWindowAlert, "=new Function();"	
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);	
-	}
-	
-	if (!settings.enabled && settings.blockJSSelection)
-	{
-		//blockJSSelection();
-	}
-	else
-	{
-		var deblockID = "ID_Unblock_JSSelection";
-		var deblockParts = [
-			"document.getSelection=", obfusChars, "documentGetSelection;",
-			"window.getSelection=", obfusChars, "windowGetSelection;"
-		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
-	}	
-	
-	if (!settings.enabled && settings.blockOnUnload)
-	{
-		//blockOnUnload();
-	}
-	else
-	{
-		var deblockID = "ID_Unblock_OnUnload";
-		var deblockParts = [
-			"window.onunload=", obfusChars, "windowOnUnLoad;"
-		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
-	}	
-	
-	if (!settings.enabled && settings.blockJSPrint)
-	{
-		//blockJSPrint();
-	}
-	else
-	{
-		var nameMaxCount = obfusChars + "maxPrints";
-		var nameWindowPrintsCount = obfusChars + "windowPrintsCount";
-		var nameWindowPrint = obfusChars + "windowPrint";
 		
-		var deblockID = "ID_Unblock_JSPrint";
+		deblockingScripts.push(deblockParts.join(""));
+	}	
+
+	if (settings.enabled || !settings.blockWindowMovingAndResize)
+	{
+		var deblockParts = [
+			"window.moveTo=", nameWindowMoveTo, ";",
+			"window.moveBy=", nameWindowMoveBy, ";",
+			"window.resizeTo=", nameWindowResizeTo, ";",
+			"window.resizeBy=", nameWindowResizeBy, ";",
+			"window.scrollBy=", nameWindowScrollBy, ";",
+			"window.scrollTo=", nameWindowScrollTo, ";",
+			"window.blur=", nameWindowBlur, ";",
+			"window.focus=", nameWindowFocus, ";"
+		];
+		deblockingScripts.push(deblockParts.join(""));	
+	}
+	else
+	{  
+		var deblockParts = [
+			nameWindowMoveTo, "=new Function();",
+			nameWindowMoveBy, "=new Function();",
+			nameWindowResizeTo, "=new Function();",
+			nameWindowResizeBy, "=new Function();",
+			nameWindowScrollBy, "=new Function();",
+			nameWindowScrollTo, "=new Function();",
+			nameWindowBlur, "=new Function();",
+			nameWindowFocus, "=new Function();"
+		];
+		
+		deblockingScripts.push(deblockParts.join(""));
+	}	
+	
+	if (settings.enabled || !settings.blockJSSelection)
+	{
+		var deblockParts = [
+			"document.getSelection=", nameDocumentGetSelection, ";",
+			"window.getSelection=", nameWindowGetSelection, ";"
+		];
+		deblockingScripts.push(deblockParts.join(""));	
+	}
+	else
+	{  
+		var deblockParts = [
+			nameDocumentGetSelection, "=new Function();",
+			nameWindowGetSelection, "=new Function();"
+		];
+		
+		deblockingScripts.push(deblockParts.join(""));
+	}	
+	
+	if (settings.enabled || !settings.blockOnUnload)
+	{
+		var deblockParts = [
+			"window.onunload=", nameWindowOnUnLoad, ";"
+		];
+		deblockingScripts.push(deblockParts.join(""));
+	}	
+	else
+	{  
+		var deblockParts = [
+			nameWindowOnUnLoad, "=new Function();"
+		];
+		
+		deblockingScripts.push(deblockParts.join(""));
+	}		
+	
+	if (settings.enabled || !settings.blockJSPrint)
+	{
+		var nameMaxCount = randomID();
+		var nameWindowPrintsCount = randomID();
+
 		var deblockParts = [
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowPrintsCount, "=0;",
 			
 			"window.print = function () { if(", nameWindowPrintsCount, " < ", nameMaxCount, ") {", nameWindowPrintsCount, "++; ", 
 			nameWindowPrint, "();} };"
-			
-			/* Old unsafe method
-			"window.print=", obfusChars, "windowPrint;"
-			*/
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
-	}	
-	
-	/* Blocking this at the very beginning was causing menu load problems on Apple.com
-	if (!settings.enabled && settings.blockCreateEvents)
-	{
-		//blockCreateEvents();
+		deblockingScripts.push(deblockParts.join(""));
 	}
 	else
-	{
-		var deblockID = "ID_Unblock_JSPrint";
+	{  
 		var deblockParts = [
-			"document.createEvent=", obfusChars, "documentCreateEvent;"
+			nameWindowPrint, "=new Function();"
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
-	}	*/
+		
+		deblockingScripts.push(deblockParts.join(""));
+	}	
 	
 	// These functions are not blocked at the very beginning because some websites use them on load or
 	// while we wait for sendMessage. Done to maintain best compatibility.
 	if (!settings.enabled)
 	{
 		if (settings.blockCreateEvents)
-			blockCreateEvents();
+			deblockingScripts.push("document.createEvent = null;");
 		if (settings.blockUnescapeEval)
-			blockUnescapeEval();
+			deblockingScripts.push("unescape = null; eval = null;");
 		if (settings.blockJSTimers)
-			blockJSTimers();
+			deblockingScripts.push("window.setTimeout = null; window.setInterval = null;");
 	}
 	
+	// Inject deblocking code and cleanup
 	{
-		var deblockID = "ID_Clean_Up";
+		var deblockID = randomID();
 		var deblockParts = [
-			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i] && ourScript[i].id.indexOf('", 
-			obfusChars, "') === 0){ourScript[i].parentNode.removeChild(ourScript[i]);}}})();"
+			"(function(){var ourScript=document.getElementsByTagName('script');for(var i=0; i < ourScript.length; i++){if(ourScript[i].id && ourScript[i].id === '", 
+			deblockID, "') {ourScript[i].parentNode.removeChild(ourScript[i]); break;}}})();"		
 		];
-		injectGlobalWithId(deblockParts.join(""), obfusChars + deblockID);
+		deblockingScripts.push(deblockParts.join(""));
+		injectGlobalWithId(deblockingScripts.join(""), deblockID);
+	}
+	
+	// For now, we will only communicate the blocked pop ups from the top window, ie: no iFrames
+	// chrome.tabs.sendRequest used to communicate from the extension only sends to the top level window
+	if (window.top === window)
+	{			
+		chrome.extension.onRequest.addListener(
+		  function(request, sender, sendResponse) {
+			if (request.type === "get last blocked")
+			{
+				try
+				{			
+					var lastBlocked = new Array();
+					for (var i = 0; i < numRememberLastBlocked; i++)
+					{
+						lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
+					}
+					sendResponse({url: lastBlocked, error: null});		  
+				}
+				catch (err)
+				{
+					sendResponse({url: "Error", error: err});
+				}
+				
+			}  
+			else
+				sendResponse({});
+		  });	
 	}
 }	
 
 
-function inject(f) {
+function injectAnon(f) {
     var script = document.createElement("script");
 	script.type = "text/javascript";
     script.textContent = "(" + f + ")();";
@@ -282,93 +424,39 @@ function injectGlobalWithId(f, id) {
     script.textContent = f;
     document.documentElement.appendChild(script);
 }
-
-function blockWindowOpen() {
-    inject(function() {
-		window.open = null;					
-    });
-}
-
-function blockWindowPrompts() {
-    inject(function() {
-		window.prompt = null;
-		window.confirm = null;
-		window.alert = null;		
-    });
-}
-
-function blockWindowMovingAndResize() {
-    inject(function() {
-	    window.moveTo = null;
-        window.moveBy = null;
-        window.resizeTo = null;
-        window.resizeBy = null;
-		window.scrollBy = null;
-		window.scrollTo = null;	
-		window.blur = null;
-		window.focus = null;		
-    });
-}
-
-function blockJSSelection() {
-    inject(function() {
-		document.getSelection = null;
-		window.getSelection = null;					
-    });
-}
-
-function blockJSTimers() {
-    inject(function() {
-		window.setTimeout = null;
-		window.setInterval = null;					
-    });
-}
 	
-function blockJSPrint() {
-    inject(function() {		
-		window.print = null;					
-    });
-}
-
-function blockOnUnload() {
-    inject(function() {		
-		window.onunload = null;					
-    });
-}
-
-function blockUnescapeEval() {
-    inject(function() {		
-		unescape = null;
-		eval = null;					
-    });
-}
-		
-function blockCreateEvents() {
-    inject(function() {
-		document.createEvent = null;			
-    });	
-}
-
-function blockCSSGetComputedStyle() {
-    inject(function() {
-		window.getComputedStyle = null;					
-    });
-}
-	
-// length should be >= 10 for good randomness and to avoid collisions
-function randomID(length)
+/*
+Returns a random string suitable for use as an id in html/javascript code.
+Length is hardcoded to be between 15 and 25 characters
+*/
+function randomID()
 {
-   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_1234567890";	// total 63 characters
-   generated = "";
-   i = Math.floor(Math.random() * 53);
-   generated += chars.charAt(i); 
+	const length = 15 + Math.floor(Math.random() * 11);	// minimum 15, max 25
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_1234567890";	// total 63 characters
+	var generated = chars.charAt(Math.floor(Math.random() * 53)); 
 
-   for(x=0;x<length;x++)
-   {
-      i = Math.floor(Math.random() * 63);
-      generated += chars.charAt(i);
-   }
+	for(var x=0;x<length;x++)
+		generated += chars.charAt(Math.floor(Math.random() * 63));
+		
+	return generated;
+}
 
-   return generated;
+/*
+Takes in an array and shuffles it randomly in place using the Fisher Yates algorithm
+array: Any array.
+*/
+function fisherYatesShuffle ( array ) 
+{
+	if (!array) return;
+	var i = array.length;
+	if (!i) return;
+	
+	while ( --i ) {
+		var j = Math.floor( Math.random() * ( i + 1 ) );
+		var tempi = array[i];
+		var tempj = array[j];
+		array[i] = tempj;
+		array[j] = tempi;
+	}
 }
 

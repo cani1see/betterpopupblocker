@@ -1,3 +1,6 @@
+/*
+Safari only. Carries out the whitelist/delisting when the browser button is pressed. Also calls up the options page.
+*/
 function performCommand(event)
 {
 	if (SAFARI)
@@ -16,13 +19,13 @@ function performCommand(event)
 			
 			if (currentURL)
 			{		
-				if (isWhitelisted(currentURL))
+				if (isAllowed(currentURL))
 				{
-					removeFromWhitelist(currentURL);
+					revokeUrl(currentURL);
 				}	
 				else
 				{
-					addToWhitelist(currentURL);
+					permitUrl(currentURL);
 				}			
 			
 				var iconAllowed = safari.extension.baseURI + "IconAllowed.png";
@@ -35,7 +38,7 @@ function performCommand(event)
 					if (item.browserWindow.activeTab.url && item.identifier === "com.optimalcycling.safari.betterpopupblocker-E6486QF2HJ browserActionButton")
 					{
 						var oldImage = item.image;
-						if (config.get('globalAllowAll') || isWhitelisted(item.browserWindow.activeTab.url))
+						if (urlsGloballyAllowed || isAllowed(item.browserWindow.activeTab.url))
 						{
 							if (item.image != iconAllowed)
 							{
@@ -77,6 +80,9 @@ function performCommand(event)
 	}
 }
 
+/*
+Safari only. Function is called by the browser when switching tabs or an even the requires a browser update.
+*/
 function validateCommand(event)
 {
 	if (SAFARI)
@@ -96,7 +102,7 @@ function validateCommand(event)
 					if (item.browserWindow.activeTab === event.target.browserWindow.activeTab 
 						&& item.identifier === "com.optimalcycling.safari.betterpopupblocker-E6486QF2HJ browserActionButton")
 					{
-						if (config.get('globalAllowAll') || isWhitelisted(currentURL))
+						if (urlsGloballyAllowed || isAllowed(currentURL))
 							item.image = safari.extension.baseURI + "IconAllowed.png";
 						else
 							item.image = safari.extension.baseURI + "IconForbidden.png";
@@ -110,6 +116,28 @@ function validateCommand(event)
 	}
 }
 
+/*
+For Safari only. Used to direct messages for functions like canLoad.
+*/
+function handleMessage(event)
+{
+	if (SAFARI)
+	{
+		switch (event.name) {
+			case "canLoad":
+				var data = event.message;
+				if (data.type === "get settings block start")
+				{				
+					event.message = generateAllSettings(data.url, event.target.url);
+				}
+				break;
+		}
+	}
+}
+
+/*
+Safari only. Updates the browser button for the tabs having the url of "currentURL".
+*/
 function updateButtons(currentURL)
 {
 	if (SAFARI)
@@ -124,7 +152,7 @@ function updateButtons(currentURL)
 				if (item.browserWindow.activeTab.url === currentURL 
 					&& item.identifier === "com.optimalcycling.safari.betterpopupblocker-E6486QF2HJ browserActionButton")
 				{
-					if (config.get('globalAllowAll') || isWhitelisted(currentURL))
+					if (urlsGloballyAllowed || isAllowed(currentURL))
 						item.image = safari.extension.baseURI + "IconAllowed.png";
 					else
 						item.image = safari.extension.baseURI + "IconForbidden.png";
@@ -149,43 +177,73 @@ function refreshTabs(urlPattern)
 			{
 				if (urlPattern === "***NOTINWHITELIST***")
 				{
-					if (currWindow.tabs[j].url && !isWhitelisted(currWindow.tabs[j].url))
-						chrome.tabs.update(currWindow.tabs[j].id, {url: currWindow.tabs[j].url});				
+					if (currWindow.tabs[j].url && !isAllowed(currWindow.tabs[j].url))
+					{
+						//chrome.tabs.update(currWindow.tabs[j].id, {url: currWindow.tabs[j].url});
+						
+						// Reloading by chrome.tabs.executeScript(...). Works with or without javascript enabled.
+						chrome.tabs.executeScript(currWindow.tabs[j].id, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});						
+					}
 				}
 				else
 				{
 					if (currWindow.tabs[j].url && urlPattern && patternMatches(currWindow.tabs[j].url, urlPattern))
-						chrome.tabs.update(currWindow.tabs[j].id, {url: currWindow.tabs[j].url});
+					{
+						//chrome.tabs.update(currWindow.tabs[j].id, {url: currWindow.tabs[j].url});
+						
+						// Reloading by chrome.tabs.executeScript(...). Works with or without javascript enabled.
+						chrome.tabs.executeScript(currWindow.tabs[j].id, {code:"if(window.location.href.indexOf('http') == 0) {window.location.reload();}"});								
+					}
 				}
 			}		
 		}
 	});
 }
 
-
-chrome.extension.onRequest.addListener(function(msg, src, send) {
-	if (msg.type === "get settings")
-	{
-		var urlInWhiteList = isWhitelisted(msg.url);
-		var urlsGloballyAllowed = config.get('globalAllowAll');    
+/*
+Generates a json object with all the applicable settings for a website of "url".
+*/
+function generateAllSettings(url, topWindowUrl)
+{
+	var theSettings = {enabled: (isAllowed(url) || urlsGloballyAllowed), 
+		blockWindowOpen: config.get('blockWindowOpen'),  
+		closeAllPopUpWindows: config.get('closeAllPopUpWindows'), 
 		
-		send({enabled: (urlInWhiteList || urlsGloballyAllowed), 
-			blockWindowOpen: config.get('blockWindowOpen'),  
-			closeAllPopUpWindows: config.get('closeAllPopUpWindows'), 
-			
-			blockWindowPrompts: config.get('blockWindowPrompts'), 
-			blockJSContextMenuAndClickIntercept: config.get('blockJSContextMenuAndClickIntercept'),
-			blockWindowMovingAndResize: config.get('blockWindowMovingAndResize'), 
-			blockUnescapeEval: config.get('blockUnescapeEval'), 
-			blockJSSelection: config.get('blockJSSelection'), 
-			blockJSTimers: config.get('blockJSTimers'), 
-			blockJSPrint: config.get('blockJSPrint'), 
-			blockOnUnload: config.get('blockOnUnload'),
-			blockWindowTargets: config.get('blockWindowTargets'),
-			
-			extendedTooltips: config.get('extendedTooltips'),
-			
-			blockCreateEvents: config.get('blockCreateEvents')});
+		blockWindowPrompts: config.get('blockWindowPrompts'), 
+		blockJSContextMenuAndClickIntercept: config.get('blockJSContextMenuAndClickIntercept'),
+		blockWindowMovingAndResize: config.get('blockWindowMovingAndResize'), 
+		blockUnescapeEval: config.get('blockUnescapeEval'), 
+		blockJSSelection: config.get('blockJSSelection'), 
+		blockJSTimers: config.get('blockJSTimers'), 
+		blockJSPrint: config.get('blockJSPrint'), 
+		blockOnUnload: config.get('blockOnUnload'),
+		blockWindowTargets: config.get('blockWindowTargets'),
+		
+		extendedTooltips: config.get('extendedTooltips'),
+		stripJSFromLinkLocations: config.get('stripJSFromLinkLocations'),
+		
+		blockCreateEvents: config.get('blockCreateEvents')};
+		
+		// We use the more restrictive of the two policies for iframes compared to the top window
+		if (url !== topWindowUrl)
+		{
+			if (!urlsGloballyAllowed && theSettings.enabled && !isAllowed(topWindowUrl))
+			{
+				theSettings.enabled = false;
+			}
+		}
+
+	return theSettings;
+}
+
+/*
+Listens for requests from the content scripts on both the Google Chrome and the Apple Safari extensions.
+*/
+chrome.extension.onRequest.addListener(function(msg, src, send) {
+	if (msg.type === "get settings block start" || msg.type === "get settings block idle")
+	{	
+		var theSettings = generateAllSettings(msg.url, src.tab.url);
+		send(theSettings);
 	}
 	else if (msg.type === "safari validate")
 	{
@@ -197,3 +255,5 @@ chrome.extension.onRequest.addListener(function(msg, src, send) {
 		send({});
 	}
 });
+
+

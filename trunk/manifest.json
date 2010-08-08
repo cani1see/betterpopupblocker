@@ -1,10 +1,12 @@
 {
+	"update_url": "http://clients2.google.com/service/update2/crx",
+
 	"name": "Better Pop Up Blocker",
-	"version": "1.5.0",
+	"version": "2.0.0",
 	"background_page": "background.html",
 	"options_page": "options.html", 
   
- 	"description": "Improves the Google Chrome pop up blocker by blocking pop up windows opened by javascript & other annoyances that it misses.",
+ 	"description": "Improves the Google Chrome pop up blocker by blocking pop up windows opened by javascript & other annoyances that it misses like prompt, alert, and confirm boxes.",
 	"icons": 
 	{ 
 		"16": "Icon-16.png",
