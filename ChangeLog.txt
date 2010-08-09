@@ -68,4 +68,7 @@ Changed the default blocking for document.createEvents to false to maintain best
 
 The core code is much more efficient due to tracking some of the local storage change events instead of regenerating all the settings on every new page.
 
+Better Pop Up Blocker 2.0.2 August 9th, 2010
+Minor bug fix release for Google Chrome only. Fixed an issue where blocked urls were not showing up in the whitelister because they were not full urls.
+
 

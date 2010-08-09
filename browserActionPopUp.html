@@ -316,6 +316,7 @@ function showLastBlocked(response)
 					}
 					
 					currBlockedURL = encodeURI(currBlockedURL.trim());
+					var theMessage = currBlockedURL;
 					
 					const maxLines = 2;
 					var urlChunks = currBlockedURL.chunk(45);
@@ -326,9 +327,9 @@ function showLastBlocked(response)
 						theMessage += (urlChunks[j] + "<br/>");
 					}
 					
-					if (urlChunks.length > maxLines)
+					if (urlChunks.length >= maxLines)
 					{
-						var lastChunk = urlChunks[3].chunk(35);
+						var lastChunk = urlChunks[maxLines].chunk(35);
 						theMessage += (lastChunk[0] + "......<br/>");
 					}
 	
