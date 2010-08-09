@@ -206,11 +206,14 @@ function coreLogic(settings) {
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
 			
-			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 2 || arguments.length == 3) {", 
+			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
+			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
 			"switch (", nameWindowsOpenCount, " % 3) {",
-			"case 0: ", namesLastBlockedOpenDiv[0], ".innerText = arguments[0]; break;",
-			"case 1: ", namesLastBlockedOpenDiv[1], ".innerText = arguments[0]; break;",
-			"case 2: ", namesLastBlockedOpenDiv[2], ".innerText = arguments[0]; break; }",
+			
+			"case 0: ", namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl; break;",
+			"case 1: ", namesLastBlockedOpenDiv[1], ".innerText = fullBlockedUrl; break;",
+			"case 2: ", namesLastBlockedOpenDiv[2], ".innerText = fullBlockedUrl; break; }",
+			
 			// Uncomment the following if we need to see that a block has been done right away
 			//"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
 			//"', true, true); ", namesLastBlockedOpenDiv[0], ".dispatchEvent(customEvent);",
