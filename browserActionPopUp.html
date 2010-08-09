@@ -327,7 +327,7 @@ function showLastBlocked(response)
 						theMessage += (urlChunks[j] + "<br/>");
 					}
 					
-					if (urlChunks.length >= maxLines)
+					if (urlChunks.length > maxLines)
 					{
 						var lastChunk = urlChunks[maxLines].chunk(35);
 						theMessage += (lastChunk[0] + "......<br/>");

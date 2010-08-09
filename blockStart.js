@@ -219,13 +219,15 @@ function coreLogic(settings) {
 			//"', true, true); ", namesLastBlockedOpenDiv[0], ".dispatchEvent(customEvent);",
 			"} } return true; } catch(err) {return true;} };",	
 
-			"window.showModelessDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 1 || arguments.length == 2 || arguments.length == 3) ", 
-			namesLastBlockedOpenDiv[0], ".innerText = arguments[0];",
-			"} return true; } catch(err) {return true;} };",			
+			"window.showModelessDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
+			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
+			namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl;",
+			"}} return true; } catch(err) {return true;} };",			
 			
-			"window.showModalDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 1 || arguments.length == 2 || arguments.length == 3) ", 
-			namesLastBlockedOpenDiv[0], ".innerText = arguments[0];",
-			"} return true; } catch(err) {return true;} };",
+			"window.showModalDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
+			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
+			namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl;",
+			"}} return true; } catch(err) {return true;} };",
 			
 			nameWindowOpen, "=new Function();",
 			nameWindowShowModelessDialog, "=new Function();",
