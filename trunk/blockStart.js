@@ -45,6 +45,7 @@ const nameWindowGetSelection = randomID();
 const nameWindowOnUnLoad = randomID();
 const nameWindowPrint = randomID();
 
+// For blocked pop up windows so we know what was blocked
 var namesLastBlockedOpenDiv = new Array();
 const numRememberLastBlocked = 3;
 for (var i = 0; i < numRememberLastBlocked; i++)
@@ -52,6 +53,9 @@ for (var i = 0; i < numRememberLastBlocked; i++)
 	namesLastBlockedOpenDiv.push(randomID());
 }
 const classLastBlockedOpenDiv = randomID();
+const nameLastBlockedOpenEvent = randomID();
+
+
 
 const obfusPartsID = randomID();
 
@@ -190,14 +194,6 @@ function coreLogic(settings) {
 			lastBlockedDiv.innerText = ''; 
 			document.documentElement.appendChild(lastBlockedDiv);
 		}
-		
-		// Uncomment the following if we need to see that a block has been done right away
-		/*
-		const nameLastBlockedOpenEvent = randomID();
-		document.getElementById(nameLastBlockedOpen1Div).addEventListener(nameLastBlockedOpenEvent, function() {
-			var lastBlocked = document.getElementById(nameLastBlockedOpen1Div).innerText;
-		});	
-		*/
 	
 		var nameMaxCount = randomID();
 		var nameWindowsOpenCount = randomID();
@@ -208,26 +204,45 @@ function coreLogic(settings) {
 			
 			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
 			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
+			
 			"switch (", nameWindowsOpenCount, " % 3) {",
+			"case 0: document.getElementById('", namesLastBlockedOpenDiv[0], "').innerText = fullBlockedUrl; break;",
+			"case 1: document.getElementById('", namesLastBlockedOpenDiv[1], "').innerText = fullBlockedUrl; break;",
+			"case 2: document.getElementById('", namesLastBlockedOpenDiv[2], "').innerText = fullBlockedUrl; break; }",
 			
-			"case 0: ", namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl; break;",
-			"case 1: ", namesLastBlockedOpenDiv[1], ".innerText = fullBlockedUrl; break;",
-			"case 2: ", namesLastBlockedOpenDiv[2], ".innerText = fullBlockedUrl; break; }",
+			// Fire an event to tell the extension we blocked something
+			"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
+			"', true, true); document.dispatchEvent(customEvent);",
 			
-			// Uncomment the following if we need to see that a block has been done right away
-			//"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
-			//"', true, true); ", namesLastBlockedOpenDiv[0], ".dispatchEvent(customEvent);",
 			"} } return true; } catch(err) {return true;} };",	
 
+			
 			"window.showModelessDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
 			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
-			namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl;",
-			"}} return true; } catch(err) {return true;} };",			
+			
+			"switch (", nameWindowsOpenCount, " % 3) {",
+			"case 0: document.getElementById('", namesLastBlockedOpenDiv[0], "').innerText = fullBlockedUrl; break;",
+			"case 1: document.getElementById('", namesLastBlockedOpenDiv[1], "').innerText = fullBlockedUrl; break;",
+			"case 2: document.getElementById('", namesLastBlockedOpenDiv[2], "').innerText = fullBlockedUrl; break; }",
+			
+			"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
+			"', true, true); document.dispatchEvent(customEvent);",			
+			
+			"} } return true; } catch(err) {return true;} };",			
+			
 			
 			"window.showModalDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
 			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
-			namesLastBlockedOpenDiv[0], ".innerText = fullBlockedUrl;",
-			"}} return true; } catch(err) {return true;} };",
+			
+			"switch (", nameWindowsOpenCount, " % 3) {",
+			"case 0: document.getElementById('", namesLastBlockedOpenDiv[0], "').innerText = fullBlockedUrl; break;",
+			"case 1: document.getElementById('", namesLastBlockedOpenDiv[1], "').innerText = fullBlockedUrl; break;",
+			"case 2: document.getElementById('", namesLastBlockedOpenDiv[2], "').innerText = fullBlockedUrl; break; }",
+			
+			"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
+			"', true, true); document.dispatchEvent(customEvent);",
+			
+			"} } return true; } catch(err) {return true;} };",
 			
 			nameWindowOpen, "=new Function();",
 			nameWindowShowModelessDialog, "=new Function();",
@@ -381,29 +396,67 @@ function coreLogic(settings) {
 	// For now, we will only communicate the blocked pop ups from the top window, ie: no iFrames
 	// chrome.tabs.sendRequest used to communicate from the extension only sends to the top level window
 	if (window.top === window)
-	{			
-		chrome.extension.onRequest.addListener(
-		  function(request, sender, sendResponse) {
-			if (request.type === "get last blocked")
-			{
-				try
-				{			
-					var lastBlocked = new Array();
-					for (var i = 0; i < numRememberLastBlocked; i++)
-					{
-						lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
-					}
-					sendResponse({url: lastBlocked, error: null});		  
-				}
-				catch (err)
+	{		
+		if (SAFARI)
+		{
+			// I believe dispatchMessage is asynchronous, unlike canLoad which is blocking. 
+			// Therefore, we have to send messages back instead of putting it in event.message.
+			// safari.self.tab.dispatchMessage("get last blocked", "data");
+			// safari.application.activeBrowserWindow.activeTab.page.dispatchMessage("get last blocked", "data");
+			// safari.self.tabs[0].page.dispatchMessage("get last blocked", "data");
+			safari.self.addEventListener("message", function(event) { 
+				switch (event.name) {
+					case "get last blocked":
+						var data = event.message;
+						try
+						{			
+							var lastBlocked = new Array();
+							for (var i = 0; i < numRememberLastBlocked; i++)
+							{
+								lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
+							}
+							//event.message = {url: lastBlocked, error: null};		  
+							chrome.extension.sendRequest({type: "window pop up blocked response", url: lastBlocked, error: null});
+						}
+						catch (err)
+						{
+							//event.message = {url: "Error", error: err};
+							chrome.extension.sendRequest({type: "window pop up blocked response", url: "Error", error: err});
+						}						
+						break;
+				}			
+			}, false);	
+		}
+		else
+		{
+			// Safari does not like the following listener in this content script for some reason. It won't run it.
+			// Will have to use the Safari specific way.
+			chrome.extension.onRequest.addListener(
+			  function(msg, src, send) {
+				if (msg.type === "get last blocked")
 				{
-					sendResponse({url: "Error", error: err});
-				}
-				
-			}  
-			else
-				sendResponse({});
-		  });	
+					try
+					{			
+						var lastBlocked = new Array();
+						for (var i = 0; i < numRememberLastBlocked; i++)
+						{
+							lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
+						}
+						send({url: lastBlocked, error: null});		  
+					}
+					catch (err)
+					{
+						send({url: "Error", error: err});
+					}
+				}  
+				else
+					send({});
+			  });
+		}		  
+		  
+		document.addEventListener(nameLastBlockedOpenEvent, function() {
+			chrome.extension.sendRequest({type: "window pop up blocked"});
+		}, true);			  
 	}
 }	
 

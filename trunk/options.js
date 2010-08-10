@@ -39,6 +39,7 @@ function init() {
 	
 	$('extendedTooltips').checked = config.get('extendedTooltips');
 	$('stripJSFromLinkLocations').checked = config.get('stripJSFromLinkLocations');
+	$('showBlockedBlinks').checked = config.get('showBlockedBlinks');
 	
 	$('showPageActionButton').checked = config.get('showPageActionButton');
 	
@@ -79,7 +80,8 @@ function save() {
 	config.set('reloadCurrentTabOnToggle', $('reloadCurrentTabOnToggle').checked);	
 	
 	config.set('extendedTooltips', $('extendedTooltips').checked);	
-	config.set('stripJSFromLinkLocations', $('stripJSFromLinkLocations').checked);	
+	config.set('stripJSFromLinkLocations', $('stripJSFromLinkLocations').checked);
+	config.set('showBlockedBlinks', $('showBlockedBlinks').checked);
 
 	config.set('showPageActionButton', $('showPageActionButton').checked);	
 	
@@ -90,6 +92,8 @@ function save() {
 
 function handleStorageChangeUpdateLists(event)
 {
+	//if (SAFARI)
+		//alert("handleStorageChangeUpdateLists");
 	if (event.key === "whitelist")
 	{
 		$('whitelist').value = config.get('whitelist').join('\n');
@@ -100,4 +104,5 @@ function handleStorageChangeUpdateLists(event)
 	}	
 }
 
+// Bug: Safari does not fire "storage" events
 window.addEventListener("storage", handleStorageChangeUpdateLists, false);
