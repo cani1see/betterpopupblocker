@@ -71,4 +71,12 @@ The core code is much more efficient due to tracking some of the local storage c
 Better Pop Up Blocker 2.0.2/2.0.3 August 9th, 2010
 Minor bug fix release for Google Chrome only. Fixed an issue where blocked urls were not showing up in the whitelister because they were not full urls.
 
+Better Pop Up Blocker 2.1.0 August 10th, 2010
+Introduced blinking of the Better Pop Up Blocker icon when it blocks a pop up window. It is turned on by default for everyone, but you can turn it off in options.
+
+Reverted a bit of code to fix an issue in Better Pop Up Blocker 2.0.0 for Apple Safari when the core code was optimized.
+Sometimes, the browser icon shown did not match the blocking on the current page when a website was whitelisted/delisted and another tab of the same site is open.
+The status would sync up after the user reloaded the page.
+This looks like it is a bug in Apple Safari itself where it doesn't fire events for HTML local storage changes like it should. Will be looking more into it.
+
 

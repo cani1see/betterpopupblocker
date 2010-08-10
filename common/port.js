@@ -103,8 +103,8 @@ if (SAFARI) {
             var request = messageEvent.message.data;
             var id = chrome.__getTabId(messageEvent.target);
 
-			// Added in the url for the sender since Google Chrome has that
-            var sender = { tab: { id: id, url: messageEvent.target.url } };
+			// Added in the url for the sender since Google Chrome has that. Also added in the target because Safari uses that a lot in extensions.
+            var sender = { tab: { id: id, url: messageEvent.target.url }, target:  messageEvent.target}; 
             var sendResponse = function(dataToSend) {
               var responseMessage = { callbackToken: messageEvent.message.callbackToken, data: dataToSend };
               messageEvent.target.page.dispatchMessage("response", responseMessage);

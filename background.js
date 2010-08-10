@@ -27,35 +27,18 @@ function performCommand(event)
 				{
 					permitUrl(currentURL);
 				}			
-			
-				var iconAllowed = safari.extension.baseURI + "IconAllowed.png";
-				var iconForbidden = safari.extension.baseURI + "IconForbidden.png";
 				
-				var itemArray = safari.extension.toolbarItems;
-				for (var i = 0; i < itemArray.length; ++i) {
-					var item = itemArray[i];
-
-					if (item.browserWindow.activeTab.url && item.identifier === "com.optimalcycling.safari.betterpopupblocker-E6486QF2HJ browserActionButton")
+				for (var i = 0; i < safari.application.browserWindows.length; i++)
+				{
+					var currWindow = safari.application.browserWindows[i];
+					for (var j = 0; j < currWindow.tabs.length; j++)
 					{
-						var oldImage = item.image;
-						if (urlsGloballyAllowed || isAllowed(item.browserWindow.activeTab.url))
+						if (currWindow.tabs[j].url && patternMatches(currWindow.tabs[j].url, currentURL))
 						{
-							if (item.image != iconAllowed)
-							{
-								item.image = iconAllowed;
-								item.browserWindow.activeTab.url = item.browserWindow.activeTab.url;
-							}
-						}	
-						else	// forbidden
-						{
-							if (item.image != iconForbidden)
-							{
-								item.image = iconForbidden;
-								item.browserWindow.activeTab.url = item.browserWindow.activeTab.url;
-							}
+							currWindow.tabs[j].url = currWindow.tabs[j].url;
 						}	
 					}			
-				}
+				}					
 			}
 			
 		}
@@ -239,11 +222,109 @@ function generateAllSettings(url, topWindowUrl)
 /*
 Listens for requests from the content scripts on both the Google Chrome and the Apple Safari extensions.
 */
+
+function showBlockedBlink(blinkCount, tabId, currentURL, currentTarget)
+{	
+	if (SAFARI)
+	{
+		if (currentTarget)
+		{
+			var itemArray = safari.extension.toolbarItems;
+			
+			for (var i = 0; i < itemArray.length; ++i) {
+				var item = itemArray[i];
+				
+				if (item.browserWindow.activeTab === currentTarget 
+					&& item.identifier === "com.optimalcycling.safari.betterpopupblocker-E6486QF2HJ browserActionButton")
+				{
+					item.image = safari.extension.baseURI + "IconForbiddenBlocked.png";
+					
+					var currItem = item;
+					setTimeout(function() 
+					{ 
+						currItem.image = safari.extension.baseURI + "IconForbidden.png";
+						
+						if (currentURL !== currItem.browserWindow.activeTab.url)
+						{
+							if (urlsGloballyAllowed || isAllowed(currItem.browserWindow.activeTab.url))
+								currItem.image = safari.extension.baseURI + "IconAllowed.png";
+							else
+								currItem.image = safari.extension.baseURI + "IconForbidden.png";
+						}
+					}, 400);
+					
+					break;
+				}			
+			}		
+		}
+
+		lastAnimatedTab = null;
+	}
+	else
+	{
+		//console.log("blink " + blinkCount);
+		if (blinkCount % 2 === 0)
+			chrome.pageAction.setIcon({path: "IconForbiddenBlocked.png", tabId: tabId});
+		else
+			chrome.pageAction.setIcon({path: "IconForbidden.png", tabId: tabId});
+			
+		chrome.pageAction.show(tabId);
+		blinkCount++;
+		
+		if (blinkCount < maxBlinks)
+		{
+			animationTimer = setTimeout(function() { showBlockedBlink(blinkCount, tabId); }, 400);	
+		}
+		else
+		{
+			chrome.pageAction.setIcon({path: "IconForbidden.png", tabId: tabId});
+			chrome.pageAction.show(tabId);
+			lastAnimatedTab = null;
+			animationTimer = null;
+			
+			chrome.tabs.get(tabId, function (tab) { 
+				if (tab.url !== currentURL)
+				{
+					if (config.get('showPageActionButton'))
+					{				
+						if (urlsGloballyAllowed || isAllowed(tab.url))
+						{
+							chrome.pageAction.setIcon({path: "IconAllowed.png", tabId: tab.id});
+						}
+						else
+						{
+							chrome.pageAction.setIcon({path: "IconForbidden.png", tabId: tab.id});
+						}
+						chrome.pageAction.show(tab.id);
+					}
+					else
+					{
+						chrome.pageAction.hide(tab.id);
+					}
+				}				
+			});
+		}
+	}
+}
+
 chrome.extension.onRequest.addListener(function(msg, src, send) {
 	if (msg.type === "get settings block start" || msg.type === "get settings block idle")
 	{	
 		var theSettings = generateAllSettings(msg.url, src.tab.url);
 		send(theSettings);
+	}
+	else if (msg.type === "window pop up blocked" && config.get("showBlockedBlinks"))
+	{
+		if (lastAnimatedTab && lastAnimatedTab === src.tab.id)
+		{
+		
+		}
+		else
+		{
+			lastAnimatedTab = src.tab.id;
+			showBlockedBlink(0, src.tab.id, src.tab.url, src.target);
+		}
+		send({});
 	}
 	else if (msg.type === "safari validate")
 	{

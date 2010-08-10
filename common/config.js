@@ -63,13 +63,14 @@ config.defaults({
 	
 	blockCreateEvents: false,
 	
-	currVersion: 200000000,
-	currDisplayVersion: "2.0.0",
+	currVersion: 200001000,
+	currDisplayVersion: "2.1.0",
 	
 	showPageActionButton: true,
 	tempList: "",	// not currently used
 	
-	useBlacklistMode: false
+	useBlacklistMode: false,
+	showBlockedBlinks: true
 });
 
 
@@ -80,6 +81,8 @@ var useBlacklistMode = config.get('useBlacklistMode');
 
 function handleStorageChange(event)
 {
+	//if (SAFARI)
+		//alert("handleStorageChange");
 	if (event.key === "whitelist")
 	{
 		whitelist = config.get('whitelist');
@@ -98,6 +101,7 @@ function handleStorageChange(event)
 	}		
 }
 
+// Bug: Safari does not fire "storage" events
 window.addEventListener("storage", handleStorageChange, false);
 
 /*
@@ -121,6 +125,8 @@ function patternMatches(url, urlPattern)
 
 function isAllowed(url)
 {
+	if (SAFARI)
+		useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
 	{
 		return !isBlacklisted(url);
@@ -133,6 +139,8 @@ function isAllowed(url)
 
 function revokeUrl(url)
 {
+	if (SAFARI)
+		useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
 	{
 		addToBlacklist(url);
@@ -145,6 +153,8 @@ function revokeUrl(url)
 
 function permitUrl(url)
 {
+	if (SAFARI)
+		useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
 	{
 		removeFromBlacklist(url);
@@ -189,26 +199,38 @@ function removeFromList(list, listName, url) {
 }
 
 function isWhitelisted(url) {
+	if (SAFARI)
+		whitelist = config.get('whitelist');
 	return islisted(whitelist, "whitelist", url);	
 }
 
 function addToWhitelist(url) {	
+	if (SAFARI)
+		whitelist = config.get('whitelist');
 	addToList(whitelist, "whitelist", url);
 }
 
 function removeFromWhitelist(url) {
+	if (SAFARI)
+		whitelist = config.get('whitelist');
 	removeFromList(whitelist, "whitelist", url);
 }
 
 function isBlacklisted(url) {
+	if (SAFARI)
+		blacklist = config.get('blacklist');
 	return islisted(blacklist, "blacklist", url);
 }
 
 function addToBlacklist(url) {	
+	if (SAFARI)
+		blacklist = config.get('blacklist');
 	addToList(blacklist, "blacklist", url);
 }
 
 function removeFromBlacklist(url) {
+	if (SAFARI)
+		blacklist = config.get('blacklist');
 	removeFromList(blacklist, "blacklist", url);
 }
 
