@@ -455,7 +455,7 @@ function coreLogic(settings) {
 		}		  
 		  
 		document.addEventListener(nameLastBlockedOpenEvent, function() {
-			chrome.extension.sendRequest({type: "window pop up blocked"});
+			chrome.extension.sendRequest({type: "window pop up blocked"});		
 		}, true);			  
 	}
 }	

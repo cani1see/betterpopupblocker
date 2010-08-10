@@ -26,7 +26,7 @@
 		config.set("whitelist", whitelist);
 	}
 	
-	if (config.get('currVersion') < 200001000)
+	if (config.get('currVersion') < 200001001)
 	{	
 		var currVersion = config.get('currVersion');
 		
@@ -46,8 +46,8 @@
 			config.set("extendedTooltips", false);
 		}
 		
-		config.set('currVersion', 200001000);
-		config.set('currDisplayVersion', "2.1.0");
+		config.set('currVersion', 200001001);
+		config.set('currDisplayVersion', "2.1.1");
 	}
 
 	/*	// For browser action button
@@ -78,7 +78,15 @@
 		safari.application.addEventListener("validate", validateCommand, false);
 		safari.application.addEventListener("command", performCommand, false);
 
-		//safari.application.addEventListener("message", handleMessage, false);		
+		//safari.application.addEventListener("message", handleMessage, false);	
+		for (var i = 0; i < safari.application.browserWindows.length; i++)
+		{
+			var currWindow = safari.application.browserWindows[i];
+			for (var j = 0; j < currWindow.tabs.length; j++)
+			{
+				currWindow.tabs[j].url = currWindow.tabs[j].url;
+			}			
+		}		
 	}
 	else
 	{
