@@ -164,9 +164,10 @@ function coreLogic(settings) {
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
 			
-			"window.open = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if (arguments.length == 2) return ", 
-			nameWindowOpen, "(arguments[0], arguments[1]); else if (arguments.length == 3) return ", nameWindowOpen, 
-			"(arguments[0], arguments[1], arguments[2]);} return true; };",	
+			"window.open = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++;",
+			"if (arguments.length == 1) return ", nameWindowOpen, "(arguments[0]); ",
+			"else if (arguments.length == 2) return ", nameWindowOpen, "(arguments[0], arguments[1]);",
+			"else if (arguments.length == 3) return ", nameWindowOpen, "(arguments[0], arguments[1], arguments[2]);} return true; };",	
 
 			"window.showModelessDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
 			"if (arguments.length == 1) return ", nameWindowShowModelessDialog, "(arguments[0]); ",
@@ -176,7 +177,7 @@ function coreLogic(settings) {
 			"window.showModalDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
 			"if (arguments.length == 1) return ", nameWindowShowModalDialog, "(arguments[0]); ",
 			"else if (arguments.length == 2) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1]); ", 
-			"else if (arguments.length == 3) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1], arguments[2]);} return true; };",				
+			"else if (arguments.length == 3) return ", nameWindowShowModalDialog, "(arguments[0], arguments[1], arguments[2]);} return true; };"				
 		];
 		
 		deblockingScripts.push(deblockParts.join(""));
@@ -202,7 +203,7 @@ function coreLogic(settings) {
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
 			
-			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
+			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
 			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
 			
 			"switch (", nameWindowsOpenCount, " % 3) {",
