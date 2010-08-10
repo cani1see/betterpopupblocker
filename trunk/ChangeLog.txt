@@ -83,6 +83,12 @@ Better Pop Up Blocker 2.1.1 August 10th, 2010
 Worked around a crashing bug in Apple Safari by reloading the currently opened tabs when re-enabling/updating Better Pop Up Blocker.
 
 Better Pop Up Blocker 2.1.2 August 10th, 2010
-Worked a bug where some window.open commands would not work because they used only one argument. Also removed an extra comma.
+Fixed a bug where some window.open commands would not work because they used only one argument. Also removed an extra comma.
+
+Better Pop Up Blocker 2.1.3 August 10th, 2010
+Improved the compatibility of the window.open commands. It means there should be fewer site compatibility problems. If you had a problem in the past with a website
+and using Better Pop Up Blocker, try it now because it is likely fixed.
+
+Pop ups selected to open from the whitelister now appear to the immediate right of the current tab instead of the very far right of the window.
 
 

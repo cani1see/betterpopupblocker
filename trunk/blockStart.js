@@ -165,9 +165,11 @@ function coreLogic(settings) {
 			"var ", nameWindowsOpenCount, "=0;",
 			
 			"window.open = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++;",
-			"if (arguments.length == 1) return ", nameWindowOpen, "(arguments[0]); ",
+			"if (!arguments || arguments.length == 0) return ", nameWindowOpen, "(); ",
+			"else if (arguments.length == 1) return ", nameWindowOpen, "(arguments[0]); ",
 			"else if (arguments.length == 2) return ", nameWindowOpen, "(arguments[0], arguments[1]);",
-			"else if (arguments.length == 3) return ", nameWindowOpen, "(arguments[0], arguments[1], arguments[2]);} return true; };",	
+			"else if (arguments.length == 3) return ", nameWindowOpen, "(arguments[0], arguments[1], arguments[2]);",	
+			"else if (arguments.length == 4) return ", nameWindowOpen, "(arguments[0], arguments[1], arguments[2], arguments[3]);} return true; };",	
 
 			"window.showModelessDialog = function () { if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; ", 
 			"if (arguments.length == 1) return ", nameWindowShowModelessDialog, "(arguments[0]); ",
@@ -203,8 +205,11 @@ function coreLogic(settings) {
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
 			
-			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
-			"var fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
+			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, 
+			"++; if (!arguments || arguments.length == 0 || arguments.length == 1 || arguments.length == 2 || arguments.length == 3 || arguments.length == 4) {", 
+			"var fullBlockedUrl = null;",
+			"if (!arguments || arguments.length === 0 || arguments[0] === null || arguments[0] === '') fullBlockedUrl = 'about:blank';",
+			"else fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
 			
 			"switch (", nameWindowsOpenCount, " % 3) {",
 			"case 0: document.getElementById('", namesLastBlockedOpenDiv[0], "').innerText = fullBlockedUrl; break;",
@@ -417,12 +422,12 @@ function coreLogic(settings) {
 								lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
 							}
 							//event.message = {url: lastBlocked, error: null};		  
-							chrome.extension.sendRequest({type: "window pop up blocked response", url: lastBlocked, error: null});
+							chrome.extension.sendRequest({type: "window pop up blocked response", index: msg.index, url: lastBlocked, error: null});
 						}
 						catch (err)
 						{
 							//event.message = {url: "Error", error: err};
-							chrome.extension.sendRequest({type: "window pop up blocked response", url: "Error", error: err});
+							chrome.extension.sendRequest({type: "window pop up blocked response", index: msg.index, url: "Error", error: err});
 						}						
 						break;
 				}			
@@ -443,11 +448,11 @@ function coreLogic(settings) {
 						{
 							lastBlocked.push(document.getElementById(namesLastBlockedOpenDiv[i]).innerText);
 						}
-						send({url: lastBlocked, error: null});		  
+						send({url: lastBlocked, index: msg.index, error: null});		  
 					}
 					catch (err)
 					{
-						send({url: "Error", error: err});
+						send({url: "Error", index: msg.index, error: err});
 					}
 				}  
 				else
