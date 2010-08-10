@@ -79,4 +79,7 @@ Sometimes, the browser icon shown did not match the blocking on the current page
 The status would sync up after the user reloaded the page.
 This looks like it is a bug in Apple Safari itself where it doesn't fire events for HTML local storage changes like it should. Will be looking more into it.
 
+Better Pop Up Blocker 2.1.1 August 10th, 2010
+Worked around a crashing bug in Apple Safari by reloading the currently opened tabs when re-enabling/updating Better Pop Up Blocker.
+
 

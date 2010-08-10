@@ -114,6 +114,9 @@ function handleMessage(event)
 					event.message = generateAllSettings(data.url, event.target.url);
 				}
 				break;
+			case "window pop up blocked":
+			
+				break;
 		}
 	}
 }
@@ -227,7 +230,7 @@ function showBlockedBlink(blinkCount, tabId, currentURL, currentTarget)
 {	
 	if (SAFARI)
 	{
-		if (currentTarget)
+		if (currentURL && currentTarget)
 		{
 			var itemArray = safari.extension.toolbarItems;
 			
