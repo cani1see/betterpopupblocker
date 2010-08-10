@@ -259,7 +259,7 @@ chrome.tabs.getSelected(null,
 					addOrRemoveDiv.onclick = function(){addSite(coreWebsiteAddress);};
 					
 					// This sendRequest only goes to the top level window of the tab, ie: not to iFrames
-					chrome.tabs.sendRequest(tab.id, {type: "get last blocked"}, showLastBlocked);				
+					chrome.tabs.sendRequest(tab.id, {type: "get last blocked", index: tab.index}, showLastBlocked);				
 				}						
 			}
 			else	// something wrong with the url
@@ -305,8 +305,8 @@ function showLastBlocked(response)
 			var spacerDisplayed = false;
 			for (var i = 0; i < response.url.length && i < lastBlockedDivs.length; i++)
 			{
-				var currBlockedURL = response.url[i];
-				if (getMainURL(currBlockedURL))
+				var currBlockedURL = response.url[i];			
+				if (currBlockedURL === "about:blank" || getMainURL(currBlockedURL))
 				{
 					if (!spacerDisplayed)
 					{
@@ -336,6 +336,7 @@ function showLastBlocked(response)
 					lastBlockedDivs[i].innerHTML = "<b>Open Blocked Pop Up</b><br/><i>" + theMessage + "</i>";
 					lastBlockedDivWrappers[i].style.display = "block";
 					lastBlockedDivWrappers[i].setAttribute("data-url", currBlockedURL);
+					lastBlockedDivWrappers[i].setAttribute("data-index", response.index);
 					lastBlockedDivWrappers[i].onclick = function(){openTab(this);};
 				}
 			}
@@ -345,7 +346,7 @@ function showLastBlocked(response)
 
 function openTab(divCaller)
 {
-	chrome.tabs.create({url: divCaller.getAttribute("data-url"), selected: true});
+	chrome.tabs.create({url: divCaller.getAttribute("data-url"), index: parseInt(divCaller.getAttribute("data-index")) + 1, selected: true});
 }	
 
 function removeSite(url) {
