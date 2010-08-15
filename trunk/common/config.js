@@ -14,8 +14,8 @@ var config = {
     set: function(key, value) {
 		try {
 			localStorage[key] = JSON.stringify(value);
-		} catch (e) {
-			if (e == QUOTA_EXCEEDED_ERR) {
+		} catch (err) {
+			if (err == QUOTA_EXCEEDED_ERR) {
 				alert('Storage quota exceeded for Better Pop Up Blocker.');
 			}
 		}
@@ -73,6 +73,33 @@ config.defaults({
 	showBlockedBlinks: true
 });
 
+/*function determineIfOldChrome()
+{
+	var splitVer = navigator.appVersion.match(/^[0-9]+\.[0-9]+/i);
+	if (splitVer && splitVer.length > 0)
+	{
+		try 
+		{
+			var verNum = parseFloat(splitVer[0]);
+			if (verNum < 5.0)	// Versions of Google Chrome less than 5 may not have the local storage events we want
+				return true;
+			else
+				return false;
+		}
+		catch (err)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+}*/
+
+var isOldChrome = false;
+//if (!SAFARI)
+	//isOldChrome = determineIfOldChrome();
 
 var whitelist = config.get('whitelist');
 var blacklist = config.get('blacklist');
@@ -105,6 +132,29 @@ function handleStorageChange(event)
 window.addEventListener("storage", handleStorageChange, false);
 
 /*
+RegExp.escape = function(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+
+// We must escape str to match correctly. The typical Internet code snippet incorrectly shows it without escaping.
+String.prototype.startsWith = function(str) 
+{return (this.match("^"+RegExp.escape(str))==str)};
+String.prototype.endsWith = function(str) 
+{return (this.match(RegExp.escape(str)+"$")==str)};
+*/
+
+String.prototype.trim = function () {
+    return this.replace(/^\s*/, "").replace(/\s*$/, "");
+};
+/*String.prototype.trim = function(){return 
+(this.replace(/^[\s\xA0]+/, "").replace(/[\s\xA0]+$/, ""))};*/
+String.prototype.chunk = function(n) {
+	if (typeof n=='undefined') n=2;
+	return this.match(RegExp('.{1,'+n+'}','g'));
+};
+
+
+/*
 Used to determine if a url matches a urlPattern.
 url: URL to be tested. Must be in lower case.
 urlPattern: The pattern to be matched. Must be in lower case.
@@ -113,56 +163,84 @@ Returns: Returns true if url starts with urlPattern. If urlPattern starts with a
 */
 function patternMatches(url, urlPattern)
 {
+	if (!url || !urlPattern)
+		return false;
+		
 	if (RegExp('^\\^', 'i').test(urlPattern))
 	{
+		// To whitelist a whole domain: ^http[s]?:\/\/([^\.]+\.)*google.co.uk($|\/)
 		return RegExp(urlPattern, 'i').test(url);			
+	}
+	else if (RegExp('^http[s]?:\/\/', 'i').test(urlPattern))
+	{
+		var startsMatch = (url.toLowerCase().indexOf(urlPattern.toLowerCase()) === 0 ? true : false);
+		if (startsMatch)
+		{
+			if (url.length === urlPattern.length)	// exact match
+				return true;
+			else // url is longer than urlPattern
+			{
+				var nextChar = url.charAt(urlPattern.length);
+				if (nextChar === "/" || nextChar === ":")
+					return true;
+				else
+					return false;
+			}
+		}
+		else
+			return false;
 	}
 	else
 	{
-		return (url.toLowerCase().indexOf(urlPattern.toLowerCase()) == 0);
+		var coreUrl = getPrimaryDomain(url);
+		if (!coreUrl)
+			return false;
+		coreUrl = coreUrl.toLowerCase();
+		urlPattern = urlPattern.toLowerCase();
+		
+		var endsMatch = false;
+		var matchedIndex = coreUrl.indexOf(urlPattern);		
+		if (matchedIndex >= 0 && (matchedIndex + urlPattern.length) === coreUrl.length)
+		   endsMatch = true;
+   
+		if (!endsMatch)
+			return false;
+		if (coreUrl.length === urlPattern.length)
+			return true;
+		if (coreUrl.charAt(coreUrl.length - urlPattern.length - 1) === ".")
+			return true;
+		return false;
 	}
 }
 
 function isAllowed(url)
 {
 	if (SAFARI)
-		useBlacklistMode = config.get('useBlacklistMode');
+			useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
-	{
 		return !isBlacklisted(url);
-	}
 	else
-	{
 		return isWhitelisted(url);
-	}
 }
 
 function revokeUrl(url)
 {
 	if (SAFARI)
-		useBlacklistMode = config.get('useBlacklistMode');
+			useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
-	{
 		addToBlacklist(url);
-	}
 	else
-	{
 		removeFromWhitelist(url)
-	}
 }
 
 function permitUrl(url)
 {
 	if (SAFARI)
-		useBlacklistMode = config.get('useBlacklistMode');
+			useBlacklistMode = config.get('useBlacklistMode');
 	if (useBlacklistMode)
-	{
 		removeFromBlacklist(url);
-	}
 	else
-	{
 		addToWhitelist(url);
-	}
 }
 
 function islisted(list, listName, url) {
@@ -191,7 +269,10 @@ function removeFromList(list, listName, url) {
 		isOnList = patternMatches(url, list[i]);
 		
 		if (isOnList)
+		{
 			list.splice(i, 1);
+			i--;
+		}
 	}
 	
 	// This is inefficient, we are saving the entire list each time
@@ -199,37 +280,37 @@ function removeFromList(list, listName, url) {
 }
 
 function isWhitelisted(url) {
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		whitelist = config.get('whitelist');
 	return islisted(whitelist, "whitelist", url);	
 }
 
 function addToWhitelist(url) {	
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		whitelist = config.get('whitelist');
 	addToList(whitelist, "whitelist", url);
 }
 
 function removeFromWhitelist(url) {
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		whitelist = config.get('whitelist');
 	removeFromList(whitelist, "whitelist", url);
 }
 
 function isBlacklisted(url) {
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		blacklist = config.get('blacklist');
 	return islisted(blacklist, "blacklist", url);
 }
 
 function addToBlacklist(url) {	
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		blacklist = config.get('blacklist');
 	addToList(blacklist, "blacklist", url);
 }
 
 function removeFromBlacklist(url) {
-	if (SAFARI)
+	if (SAFARI || isOldChrome)
 		blacklist = config.get('blacklist');
 	removeFromList(blacklist, "blacklist", url);
 }
@@ -239,14 +320,32 @@ Example for http://www.google.com/something.html, this returns http://www.google
 */
 function getMainURL(currURL)
 {
-	var splitURL = currURL.match(/^http[s]?:\/\/[^\.]+\.[^\/]+/i);
+	if (!currURL)
+		return;
+	var splitURL = currURL.match(/^http[s]?:\/\/[^\.]+\.[^\/:]+/i);
 	if (splitURL && splitURL.length > 0)
 		return splitURL[0];
 	else
 		return null;	
 }
 
-String.prototype.chunk = function(n) {
-	if (typeof n=='undefined') n=2;
-	return this.match(RegExp('.{1,'+n+'}','g'));
-};
+/*
+Example for http://maps.google.com/something.html, this returns maps.google.com. Returns null if no match is found.
+For http://www.google.com/something.html returns google.com
+*/
+function getPrimaryDomain(currURL)
+{
+	if (!currURL)
+		return null;
+	var splitURL = currURL.toLowerCase().match(/^http[s]?:\/\/([^\.]+\.[^\/:]+)/i);
+	if (splitURL && splitURL.length > 1)
+	{
+		var splitURL2 = splitURL[1].match(/^www\.([^\.]+\.[^\/]+)/i);
+		if (splitURL2 && splitURL2.length > 1)
+			return splitURL2[1];
+		else
+			return splitURL[1]
+	}
+	else
+		return null;	
+}

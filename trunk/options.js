@@ -9,7 +9,16 @@ function lines(s)
 	if (links)
 	{
 		for (var i = 0; i < links.length; i++)
-			links[i] = links[i].trim();
+		{
+			if (links[i])
+				links[i] = links[i].trim();
+			if (!links[i] || links.length === 0)
+			{
+				links.splice(i, 1);
+				i--;
+			}			
+		}
+		links.sort();
 	}
 	return links;
 }

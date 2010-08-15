@@ -18,6 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 // Save the function pointers to the javascript functions we are going to manipulate.
 // Then, set them to null. This is done at the very beginning because below, sendRequest is asynchronous
 // and will let other javascript code execute while it's waiting. 
@@ -98,7 +99,7 @@ fisherYatesShuffle(obfusParts1);
 
 // The part of the javascript that sets the current javascript functions to null and cleans up the code
 var obfusParts2 = [
-	"window.open=null;window.showModelessDialog=null;window.showModalDialog=null;window.prompt=null;window.confirm=null;window.alert=null;",
+	"window.open=new Function();window.showModelessDialog=null;window.showModalDialog=null;window.prompt=null;window.confirm=null;window.alert=null;",
 	"window.moveTo=null;window.moveBy=null;window.resizeTo=null;window.resizeBy=null;window.scrollBy=null;window.scrollTo=null;window.blur=null;window.focus=null;",
 	"document.getSelection=null;window.getSelection=null;window.onunload=null;window.print=null;",
 	
@@ -205,10 +206,11 @@ function coreLogic(settings) {
 			"const ", nameMaxCount, "=30;",
 			"var ", nameWindowsOpenCount, "=0;",
 			
-			"window.open = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, 
+			"window.open = function() {var dummyOpen = { close: function(){return true;}, test: function(){return true;}, closed: false, innerHeight: 480, innerWidth: 640};", 
+			"try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, 
 			"++; if (!arguments || arguments.length == 0 || arguments.length == 1 || arguments.length == 2 || arguments.length == 3 || arguments.length == 4) {", 
 			"var fullBlockedUrl = null;",
-			"if (!arguments || arguments.length === 0 || arguments[0] === null || arguments[0] === '') fullBlockedUrl = 'about:blank';",
+			"if (!arguments || arguments.length === 0 || arguments[0] === null || arguments[0] === '' || arguments[0] === 'about:blank') fullBlockedUrl = 'about:blank';",
 			"else fullBlockedUrl = (arguments[0].indexOf('http')===0 ? arguments[0] : (window.location.protocol + '//' + window.location.hostname + '/' + arguments[0]));",
 			
 			"switch (", nameWindowsOpenCount, " % 3) {",
@@ -220,7 +222,7 @@ function coreLogic(settings) {
 			"var customEvent = document.createEvent('Event'); customEvent.initEvent('", nameLastBlockedOpenEvent, 
 			"', true, true); document.dispatchEvent(customEvent);",
 			
-			"} } return true; } catch(err) {return true;} };",	
+			"} } return dummyOpen; } catch(err) {return dummyOpen;} };",	
 
 			
 			"window.showModelessDialog = function() { try{ if(", nameWindowsOpenCount, " < ", nameMaxCount, ") {", nameWindowsOpenCount, "++; if ((arguments.length == 1 || arguments.length == 2 || arguments.length == 3) && arguments[0]) {", 
@@ -413,7 +415,7 @@ function coreLogic(settings) {
 			safari.self.addEventListener("message", function(event) { 
 				switch (event.name) {
 					case "get last blocked":
-						var data = event.message;
+						var msg = event.message;
 						try
 						{			
 							var lastBlocked = new Array();
