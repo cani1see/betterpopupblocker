@@ -270,10 +270,10 @@ chrome.tabs.getSelected(null,
 				
 			}		
 		
-			toggleOnOffDiv.appendChild(document.createTextNode("Temporarily Allow All"));
+			toggleOnOffDiv.appendChild(document.createTextNode("Temporarily Allow All Globally"));
 			toggleOnOffDivWrapper.style.display = "block";
 		}
-		toggleOnOffDiv.onclick = function(){toggleOnOff(urlsGloballyAllowed);};				
+		toggleOnOffDiv.onclick = function(){toggleOnOff();};				
 	}
 );
 
@@ -316,7 +316,6 @@ function showLastBlocked(response)
 					}
 					
 					currBlockedURL = encodeURI(currBlockedURL.trim());
-					var theMessage = currBlockedURL;
 					
 					const maxLines = 2;
 					var urlChunks = currBlockedURL.chunk(45);
@@ -363,7 +362,7 @@ function addSite(url) {
 	window.close();
 }
 
-function toggleOnOff(urlsGloballyAllowed) {
+function toggleOnOff() {
 		
 	/*  // For browser action button
 	if (urlsGloballyAllowed == true)
