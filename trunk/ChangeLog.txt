@@ -91,7 +91,7 @@ and using Better Pop Up Blocker, try it now because it is likely fixed.
 
 Pop ups selected to open from the whitelister now appear to the immediate right of the current tab instead of the very far right of the window.
 
-Better Pop Up Blocker 2.1.4 August 11th, 2010
+Better Pop Up Blocker 2.1.4 August 15th, 2010
 Minor bug fix release while I work on a "very interesting" Google Chrome extension.
 
 More compatibility improvements for window.open.
@@ -101,3 +101,8 @@ Fixed a potential issue where a site may not be totally delisted from the whitel
 Implemented more rigorous url matching.
 
 Added a check so that Google Chrome 5.0 or later is required.
+
+Better Pop Up Blocker 2.1.5 August 26th, 2010
+
+Added a check in the port.js file for Safari to try to solve a crash bug for Safari on Mac users where Safari loses track of a callback. 
+This is a known problem with the Safari extension API itself and not with Better Pop Up Blocker.
