@@ -244,6 +244,9 @@ function permitUrl(url)
 }
 
 function islisted(list, listName, url) {
+	if (!list || !url)
+		return false;
+		
 	var isOnList = false;
 	for (var i = 0; i < list.length; i++)
 	{
@@ -330,22 +333,33 @@ function getMainURL(currURL)
 }
 
 /*
-Example for http://maps.google.com/something.html, this returns maps.google.com. Returns null if no match is found.
-For http://www.google.com/something.html returns google.com
+Example for http://maps.google.com/something.html or maps.google.com, this returns google.com. Returns null if no match is found.
+http://www.w3schools.com/HTML/html_url.asp
 */
 function getPrimaryDomain(currURL)
 {
 	if (!currURL)
 		return null;
-	var splitURL = currURL.toLowerCase().match(/^http[s]?:\/\/([^\.]+\.[^\/:]+)/i);
-	if (splitURL && splitURL.length > 1)
-	{
-		var splitURL2 = splitURL[1].match(/^www\.([^\.]+\.[^\/]+)/i);
-		if (splitURL2 && splitURL2.length > 1)
-			return splitURL2[1];
-		else
-			return splitURL[1]
-	}
+	
+	currURL = currURL.toLowerCase();
+	
+	var knownForms = currURL.match(/([^\.\/]+\.(asia|biz|cat|coop|edu|info|eu.int|int|gov|jobs|mil|mobi|name|tel|travel|aaa.pro|aca.pro|acct.pro|avocat.pro|bar.pro|cpa.pro|jur.pro|law.pro|med.pro|eng.pro|pro|ar.com|br.com|cn.com|de.com|eu.com|gb.com|hu.com|jpn.com|kr.com|no.com|qc.com|ru.com|sa.com|se.com|uk.com|us.com|uy.com|za.com|com|ab.ca|bc.ca|mb.ca|nb.ca|nf.ca|nl.ca|ns.ca|nt.ca|nu.ca|on.ca|pe.ca|qc.ca|sk.ca|yk.ca|gc.ca|ca|gb.net|se.net|uk.net|za.net|net|ae.org|za.org|org|[^\.\/]+\.uk|act.edu.au|nsw.edu.au|nt.edu.au|qld.edu.au|sa.edu.au|tas.edu.au|vic.edu.au|wa.edu.au|act.gov.au|nt.gov.au|qld.gov.au|sa.gov.au|tas.gov.au|vic.gov.au|wa.gov.au|[^\.\/]+\.au))($|\/|:){1}/i);
+	if (knownForms && knownForms.length > 1)
+		return knownForms[1]
 	else
-		return null;	
+	{		
+		var splitURL = currURL.toLowerCase().match(/^http[s]?:\/\/([^\.]+\.[^\/:]+)/i);
+		if (splitURL && splitURL.length > 1)
+		{
+			var splitURL2 = splitURL[1].match(/^www\.([^\.]+\.[^\/]+)/i);
+			if (splitURL2 && splitURL2.length > 1)
+				return splitURL2[1];
+			else
+				return splitURL[1]
+		}
+		else
+		{
+			return currURL;
+		}
+	}
 }
