@@ -26,7 +26,7 @@
 		config.set("whitelist", whitelist);
 	}
 	
-	if (config.get('currVersion') < 200001005)
+	if (config.get('currVersion') < 200001006)
 	{	
 		var currVersion = config.get('currVersion');
 		
@@ -46,26 +46,15 @@
 			config.set("extendedTooltips", false);
 		}
 		
-		config.set('currVersion', 200001005);
-		config.set('currDisplayVersion', "2.1.5");
+		if (currVersion < 200001006)
+		{
+			// Some users were having site compatiblity issues when blocking window targets so we are resetting it for everyone.
+			config.set("blockWindowTargets", false);
+		}		
+		
+		config.set('currVersion', 200001006);
+		config.set('currDisplayVersion', "2.1.6");
 	}
-
-	/*	// For browser action button
-	config.set('globalAllowAll', false);
-	
-	// Show the current state of the plugin
-	var initialState = urlsGloballyAllowed;
-	if (initialState == true)
-	{		
-		chrome.browserAction.setBadgeText({text:String('off')});
-		chrome.browserAction.setBadgeBackgroundColor({color:[0, 0, 0, 100]});		
-	}
-	else
-	{
-		chrome.browserAction.setBadgeText({text:String('on')});
-		chrome.browserAction.setBadgeBackgroundColor({color:[0, 200, 0, 100]});		
-	}
-	*/
 	
 	config.set('globalAllowAll', false);
 	config.set('tempList', new Array());

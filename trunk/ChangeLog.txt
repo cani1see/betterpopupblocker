@@ -106,3 +106,7 @@ Better Pop Up Blocker 2.1.5 August 26th, 2010
 
 Added a check in the port.js file for Safari to try to solve a crash bug for Safari on Mac users where Safari loses track of a callback. 
 This is a known problem with the Safari extension API itself and not with Better Pop Up Blocker.
+
+Better Pop Up Blocker 2.1.6 September 6th, 2010
+
+Did a reset of blockWindowTargets to false for everyone since some users reported site compatibility issues when blocking window targets by default.
