@@ -55,7 +55,7 @@ config.defaults({
 	blockJSTimers: false,
 	blockJSPrint: true,	
 	blockOnUnload: true,
-	blockWindowTargets: true,
+	blockWindowTargets: false,
 	reloadCurrentTabOnToggle: true,
 	
 	extendedTooltips: false,
